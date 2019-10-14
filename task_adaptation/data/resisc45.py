@@ -1,0 +1,86 @@
+# coding=utf-8
+# Copyright 2019 Google LLC.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Implements RESISC-45 data class."""
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from task_adaptation.data import base
+from task_adaptation.registry import Registry
+import tensorflow_datasets as tfds
+
+TRAIN_SPLIT_PERCENT = 60
+VALIDATION_SPLIT_PERCENT = 20
+TEST_SPLIT_PERCENT = 20
+
+
+@Registry.register("data.resisc45", "object")
+class Resisc45Data(base.ImageTfdsData):
+  """Provides RESISC-45 dataset.
+
+  RESISC45 dataset is a publicly available benchmark for Remote Sensing Image
+  Scene Classification (RESISC), created by Northwestern Polytechnical
+  University (NWPU). This dataset contains 31,500 images, covering 45 scene
+  classes with 700 images in each class.
+
+  URL: http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html
+  """
+
+  def __init__(self, data_dir=None):
+    dataset_builder = tfds.builder("resisc45:3.*.*", data_dir=data_dir)
+    dataset_builder.download_and_prepare()
+
+    tfds_splits = {
+        "train":
+            "train[:{}%]".format(TRAIN_SPLIT_PERCENT),
+        "val":
+            "train[{}%:{}%]".format(
+                TRAIN_SPLIT_PERCENT,
+                TRAIN_SPLIT_PERCENT + VALIDATION_SPLIT_PERCENT),
+        "trainval":
+            "train[:{}%]".format(TRAIN_SPLIT_PERCENT +
+                                 VALIDATION_SPLIT_PERCENT),
+        "test":
+            "train[{}%:]".format(TRAIN_SPLIT_PERCENT +
+                                 VALIDATION_SPLIT_PERCENT),
+    }
+
+    # Example counts are retrieved from the tensorflow dataset info.
+    num_examples = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
+    train_count = num_examples * TRAIN_SPLIT_PERCENT // 100
+    val_count = num_examples * VALIDATION_SPLIT_PERCENT // 100
+    test_count = num_examples * TEST_SPLIT_PERCENT // 100
+
+    # Creates a dict with example counts for each split.
+    num_samples_splits = {
+        "train": train_count,
+        "val": val_count,
+        "trainval": train_count + val_count,
+        "test": test_count
+    }
+
+    super(Resisc45Data, self).__init__(
+        dataset_builder=dataset_builder,
+        tfds_splits=tfds_splits,
+        num_samples_splits=num_samples_splits,
+        num_preprocessing_threads=400,
+        shuffle_buffer_size=10000,
+        # Note: Rename tensors but keep their original types.
+        base_preprocess_fn=base.make_get_and_cast_tensors_fn({
+            "image": ("image", None),
+            "label": ("label", None),
+        }),
+        num_classes=dataset_builder.info.features["label"].num_classes)
