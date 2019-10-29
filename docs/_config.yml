@@ -25,8 +25,8 @@ description: >- # this means to ignore newlines until "baseurl:"
   The Visual Task Adaptation Benchmark (VTAB) contains 19 vision tasks.
   Algorithms must solve each task with limited downstream data, and without
   task-specific logic.
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "/task_adaptation" # the subpath of your site, e.g. /blog
+url: "https://google-research.github.io/" # the base hostname & protocol for your site, e.g. http://example.com
 
 # Build settings
 theme: minima
