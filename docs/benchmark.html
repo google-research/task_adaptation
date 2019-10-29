@@ -1,0 +1,27 @@
+---
+layout: page
+title: Leaderboard
+---
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Detailed Leaderboard</title>
+
+Mean scores across all 19 tasks.
+The two scenarios are: 1000 examples per task, and full datasets.
+All cells report top-1 accuracy.
+<br/>
+<br/>
+<!-- Render the benchmarks -->
+<div class="benchmark summary"></div>
+<h2>Breakdown Across Tasks</h2>
+<p>
+  Select datasets to include:
+</p>
+<div class="datasets"></div>
+<h3>1000 Training Examples per task</h3>
+<div class="benchmark sampled"></div>
+<h3>Full Training Sets</h3>
+<div class="benchmark full"></div>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="benchmark_data.js"></script>
+<link rel="stylesheet" type="text/css" href="benchmark_data.css" />

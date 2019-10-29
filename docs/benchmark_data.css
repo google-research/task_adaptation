@@ -1,0 +1,55 @@
+.benchmark {
+  margin-bottom: 2em;
+}
+
+.benchmark.full,
+.benchmark.sampled {
+  left: 50%;
+  margin-left: calc(-50vw + 80px);
+  overflow: auto;
+  position: relative;
+  width: calc(100vw - 160px);
+}
+
+.benchmark table {
+  table-layout: fixed;
+  word-break: break-all;
+  margin: 0;
+}
+
+.benchmark tbody tr:hover {
+  background-color: rgba(255, 187, 0, 0.5);
+}
+
+.benchmark td.model {
+  white-space:nowrap;
+}
+
+.benchmark th {
+  font-size: 0.8em;
+  width: 32px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.benchmark th:first-child {
+  width: 100px;
+}
+
+.benchmark th:not(:first-child) {
+  cursor: pointer;
+}
+
+.benchmark th.sort-key:not(:first-child) {
+  background-color: rgba(0, 0, 0, 0.2);
+  text-decoration: underline;
+}
+
+.datasets {
+  margin-bottom: 2em;
+}
+
+h2 {
+  font-size: 1.3em;
+}
