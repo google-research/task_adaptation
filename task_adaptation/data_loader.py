@@ -27,6 +27,7 @@ from task_adaptation.data import caltech
 from task_adaptation.data import cifar
 from task_adaptation.data import clevr
 from task_adaptation.data import diabetic_retinopathy
+from task_adaptation.data import dmlab
 from task_adaptation.data import dsprites
 from task_adaptation.data import dtd
 from task_adaptation.data import eurosat

@@ -90,7 +90,11 @@ class BaseDataTest(tf.test.TestCase):
         self.assertIn(tensor_name, tf_data.output_shapes.keys())
         expected_shape = [batch_size] + list(expected_shape)
         actual_shape = tf_data.output_shapes[tensor_name].as_list()
-        self.assertEqual(actual_shape, expected_shape)
+        self.assertEqual(
+            actual_shape,
+            expected_shape,
+            msg=("Tensor {!r} for split {!r} does not match the expected "
+                 "value".format(tensor_name, split)))
 
   def test_label_keys(self):
     self.assertEqual(

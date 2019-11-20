@@ -263,10 +263,12 @@ class ImageData(object):
         data = data.cache()
 
     # Repeats data `epochs` time or indefinitely if `epochs` is None.
-    data = data.repeat(epochs)
+    if epochs is None or epochs > 1:
+      data = data.repeat(epochs)
 
-    if not for_eval:
-      data = data.shuffle(shuffle_buffer_size or self._shuffle_buffer_size)
+    shuffle_buffer_size = shuffle_buffer_size or self._shuffle_buffer_size
+    if not for_eval and shuffle_buffer_size > 1:
+      data = data.shuffle(shuffle_buffer_size)
 
     # Compose the base_preprocess_fn and the given preprocess_fn.
     preprocess_fn = compose_preprocess_fn(self._image_decoder,

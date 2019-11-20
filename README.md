@@ -14,7 +14,7 @@ public datasets:
 - [*CLEVR distance prediction*](https://cs.stanford.edu/people/jcjohns/clevr/)
 - [*CLEVR counting*](https://cs.stanford.edu/people/jcjohns/clevr/)
 - [*Diabetic Rethinopathy*](https://www.kaggle.com/c/diabetic-retinopathy-detection/data)
-- [*DMLab Frames*](https://TBD)
+- [*Dmlab Frames*](https://arxiv.org/abs/1910.04867)
 - [*dSprites orientation prediction*](https://github.com/deepmind/dsprites-dataset)
 - [*dSprites location prediction*](https://github.com/deepmind/dsprites-dataset)
 - [*Describable Textures Dataset (DTD)*](https://www.robots.ox.ac.uk/~vgg/data/dtd/)
@@ -44,7 +44,7 @@ You can install the library and all necessary dependencies by running:
 
 ## Dataset preparation
 
-VTAB uses the [tensoflow datasets library (TFDS)](https://www.tensorflow.org/datasets)
+VTAB uses the [tensorflow datasets library (TFDS)](https://www.tensorflow.org/datasets)
 that automatically downloads and preprocesses VTAB datasets. *TFDS* will
 download and preprocess a dataset when it is used for the first time.
 Subsequently, it will reuse already downloaded and preprocessed dataset.
@@ -156,7 +156,7 @@ $ gsutil mb gs://$BUCKET
 Note, that Cloud TPU does not support local file system, so the above step is
 absolutely necessary.
 
-#### Setup tensoflow hub cache directory
+#### Setup tensorflow hub cache directory
 
 Now we need to setup tensorflow hub to cache Hub modules in our bucket:
 

@@ -21,11 +21,11 @@ To highlight a result to the VTAB admins, contact vtab@google.com.
 
 VTAB provides:
 * [Code](https://github.com/google-research/task_adaptation) to run the benchmark.
-* [A repository](https://tfhub.dev/f/vtab) of pre-trained models, evaluated on the benchmark.
+* [A repository](https://tfhub.dev/vtab) of pre-trained models, evaluated on the benchmark.
 * A public leaderboard to track progress.
 * *Coming Soon*: A mechanism to submit TF Hub modules for automatic evaluation.
 
 
 [Paper](https://arxiv.org/abs/1910.04867)<br/>
 [GitHub](https://github.com/google-research/task_adaptation)<br/>
-[Models on TF Hub](https://tfhub.dev/f/vtab)
+[Models on TF Hub](https://tfhub.dev/vtab)

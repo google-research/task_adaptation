@@ -29,6 +29,7 @@ datasets=('caltech101' \
           'svhn' \
           'resisc45' \
           'eurosat' \
+          'dmlab' \
           'kitti(task="closest_vehicle_distance")' \
           'smallnorb(predicted_attribute="label_azimuth")' \
           'smallnorb(predicted_attribute="label_elevation")' \

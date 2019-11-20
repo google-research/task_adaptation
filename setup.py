@@ -35,8 +35,8 @@ setup(
         'numpy',
         'six',
         'mock',
-        'tensorflow==1.15rc3',
-        'tensorflow-datasets',
+        'tensorflow==1.15',
+        'tfds-nightly',
         'tensorflow-hub',
     ],
     classifiers=[
