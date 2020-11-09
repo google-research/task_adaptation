@@ -20,10 +20,10 @@ from __future__ import division
 from __future__ import print_function
 from task_adaptation.data import data_testing_lib
 from task_adaptation.data import kitti
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
-class KittiDataCountTest(data_testing_lib.BaseTfdsDataTest):
+class KittiDataCountTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -31,11 +31,14 @@ class KittiDataCountTest(data_testing_lib.BaseTfdsDataTest):
         data_wrapper=kitti.KittiData(task="count_all"),
         num_classes=16,
         expected_num_samples=dict(
-        train=5077,
-        val=634,
-        trainval=5711,
-        test=634,
-            ),
+            train=5077,
+            val=634,
+            trainval=5711,
+            test=634,
+            train800val200=1000,
+            train800=800,
+            val200=200,
+        ),
         required_tensors_shapes={
             "image": (None, None, 3),
             "label": (),
@@ -43,7 +46,7 @@ class KittiDataCountTest(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map={})
 
 
-class KittiDataCountLeftTest(data_testing_lib.BaseTfdsDataTest):
+class KittiDataCountLeftTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -51,11 +54,14 @@ class KittiDataCountLeftTest(data_testing_lib.BaseTfdsDataTest):
         data_wrapper=kitti.KittiData(task="count_left"),
         num_classes=16,
         expected_num_samples=dict(
-        train=5077,
-        val=634,
-        trainval=5711,
-        test=634,
-            ),
+            train=5077,
+            val=634,
+            trainval=5711,
+            test=634,
+            train800val200=1000,
+            train800=800,
+            val200=200,
+        ),
         required_tensors_shapes={
             "image": (None, None, 3),
             "label": (),
@@ -63,7 +69,7 @@ class KittiDataCountLeftTest(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map={})
 
 
-class KittiDataCountFarTest(data_testing_lib.BaseTfdsDataTest):
+class KittiDataCountFarTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -71,11 +77,14 @@ class KittiDataCountFarTest(data_testing_lib.BaseTfdsDataTest):
         data_wrapper=kitti.KittiData(task="count_far"),
         num_classes=16,
         expected_num_samples=dict(
-        train=5077,
-        val=634,
-        trainval=5711,
-        test=634,
-            ),
+            train=5077,
+            val=634,
+            trainval=5711,
+            test=634,
+            train800val200=1000,
+            train800=800,
+            val200=200,
+        ),
         required_tensors_shapes={
             "image": (None, None, 3),
             "label": (),
@@ -83,7 +92,7 @@ class KittiDataCountFarTest(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map={})
 
 
-class KittiDataCountNearTest(data_testing_lib.BaseTfdsDataTest):
+class KittiDataCountNearTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -91,11 +100,14 @@ class KittiDataCountNearTest(data_testing_lib.BaseTfdsDataTest):
         data_wrapper=kitti.KittiData(task="count_near"),
         num_classes=16,
         expected_num_samples=dict(
-        train=5077,
-        val=634,
-        trainval=5711,
-        test=634,
-            ),
+            train=5077,
+            val=634,
+            trainval=5711,
+            test=634,
+            train800val200=1000,
+            train800=800,
+            val200=200,
+        ),
         required_tensors_shapes={
             "image": (None, None, 3),
             "label": (),
@@ -103,7 +115,7 @@ class KittiDataCountNearTest(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map={})
 
 
-class KittiDataClosestDistanceTest(data_testing_lib.BaseTfdsDataTest):
+class KittiDataClosestDistanceTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -111,11 +123,14 @@ class KittiDataClosestDistanceTest(data_testing_lib.BaseTfdsDataTest):
         data_wrapper=kitti.KittiData(task="closest_object_distance"),
         num_classes=5,
         expected_num_samples=dict(
-        train=5077,
-        val=634,
-        trainval=5711,
-        test=634,
-            ),
+            train=5077,
+            val=634,
+            trainval=5711,
+            test=634,
+            train800val200=1000,
+            train800=800,
+            val200=200,
+        ),
         required_tensors_shapes={
             "image": (None, None, 3),
             "label": (),
@@ -123,7 +138,7 @@ class KittiDataClosestDistanceTest(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map={})
 
 
-class KittiDataClosestXLocTest(data_testing_lib.BaseTfdsDataTest):
+class KittiDataClosestXLocTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -135,6 +150,9 @@ class KittiDataClosestXLocTest(data_testing_lib.BaseTfdsDataTest):
             val=634,
             trainval=5711,
             test=634,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),
@@ -143,7 +161,7 @@ class KittiDataClosestXLocTest(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map={})
 
 
-class KittiDataCountVehiclesTest(data_testing_lib.BaseTfdsDataTest):
+class KittiDataCountVehiclesTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -155,6 +173,9 @@ class KittiDataCountVehiclesTest(data_testing_lib.BaseTfdsDataTest):
             val=634,
             trainval=5711,
             test=634,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),
@@ -163,7 +184,7 @@ class KittiDataCountVehiclesTest(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map={})
 
 
-class KittiDataClosestVehicleTest(data_testing_lib.BaseTfdsDataTest):
+class KittiDataClosestVehicleTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -175,6 +196,9 @@ class KittiDataClosestVehicleTest(data_testing_lib.BaseTfdsDataTest):
             val=634,
             trainval=5711,
             test=634,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),

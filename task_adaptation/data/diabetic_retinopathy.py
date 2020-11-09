@@ -20,11 +20,12 @@ from __future__ import division
 from __future__ import print_function
 import task_adaptation.data.base as base
 from task_adaptation.registry import Registry
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+import tensorflow_addons.image as tfa_image
 import tensorflow_datasets as tfds
 
 
-@Registry.register("data.diabetic_retinopathy", "object")
+@Registry.register("data.diabetic_retinopathy", "class")
 class RetinopathyData(base.ImageTfdsData):
   """Provides Diabetic Retinopathy classification data.
 
@@ -57,21 +58,29 @@ class RetinopathyData(base.ImageTfdsData):
     dataset_builder.download_and_prepare()
 
     # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {}
-    tfds_splits["train"] = "train"
-    tfds_splits["val"] = "validation"
-    tfds_splits["trainval"] = "train+validation"
-    tfds_splits["test"] = "test"
+    tfds_splits = {
+        "train": "train",
+        "val": "validation",
+        "trainval": "train+validation",
+        "test": "test",
+        "train800": "train[:800]",
+        "val200": "validation[:200]",
+        "train800val200": "train[:800]+validation[:200]",
+    }
 
     # Creates a dict with example counts for each split.
-    num_samples_splits = {}
     train_count = dataset_builder.info.splits["train"].num_examples
     val_count = dataset_builder.info.splits["validation"].num_examples
     test_count = dataset_builder.info.splits["test"].num_examples
-    num_samples_splits["train"] = train_count
-    num_samples_splits["val"] = val_count
-    num_samples_splits["trainval"] = train_count + val_count
-    num_samples_splits["test"] = test_count
+    num_samples_splits = {
+        "train": train_count,
+        "val": val_count,
+        "trainval": train_count + val_count,
+        "test": test_count,
+        "train800": 800,
+        "val200": 200,
+        "train800val200": 1000,
+    }
 
     super(RetinopathyData, self).__init__(
         dataset_builder=dataset_builder,
@@ -168,7 +177,7 @@ class RetinopathyData(base.ImageTfdsData):
                      [c10, c11, (1.0 - c11) * cy - c10 * cx + dy],
                      [0.0, 0.0, 1.0]]
     affine_matrix = tf.convert_to_tensor(affine_matrix, dtype=tf.float32)
-    transform = tf.contrib.image.matrices_to_flat_transforms(
+    transform = tfa_image.transform_ops.matrices_to_flat_transforms(
         tf.linalg.inv(affine_matrix))
     if self._config in self._CONFIGS_WITH_GREY_BACKGROUND:
       # Since background is grey in these configs, put in pixels in [-1, 1]
@@ -176,7 +185,7 @@ class RetinopathyData(base.ImageTfdsData):
       image = tf.cast(image, dtype=tf.float32)
       image = (image / 127.5) - 1.0
     # Apply the affine transformation.
-    image = tf.contrib.image.transform(images=image, transforms=transform)
+    image = tfa_image.transform(images=image, transforms=transform)
     if self._config in self._CONFIGS_WITH_GREY_BACKGROUND:
       # Put pixels back to [0, 255] range and cast to uint8, since this is what
       # our preprocessing pipeline usually expects.

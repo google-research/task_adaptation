@@ -23,7 +23,7 @@ from task_adaptation.registry import Registry
 import tensorflow_datasets as tfds
 
 
-@Registry.register("data.oxford_flowers102", "object")
+@Registry.register("data.oxford_flowers102", "class")
 class OxfordFlowers102Data(base.ImageTfdsData):
   """Provides Oxford 102 categories flowers dataset.
 
@@ -32,29 +32,57 @@ class OxfordFlowers102Data(base.ImageTfdsData):
   URL: https://www.robots.ox.ac.uk/~vgg/data/flowers/102/
   """
 
-  def __init__(self, data_dir=None):
+  def __init__(self, data_dir=None, train_split_percent=None):
     dataset_builder = tfds.builder("oxford_flowers102:2.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
-
-    tfds_splits = {
-        "train": "train",
-        "val": "validation",
-        "trainval": "train+validation",
-        "test": "test",
-    }
 
     # Example counts are retrieved from the tensorflow dataset info.
     train_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
     val_count = dataset_builder.info.splits[tfds.Split.VALIDATION].num_examples
     test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
 
-    # Creates a dict with example counts for each split.
-    num_samples_splits = {
-        "train": train_count,
-        "val": val_count,
-        "trainval": train_count + val_count,
-        "test": test_count
-    }
+    if train_split_percent:
+      tfds_splits = {
+          "train": "train[:{s}%]+validation[:{s}%]".format(
+              s=train_split_percent),
+          "val": "train[-{s}%:]+validation[-{s}%:]".format(
+              s=train_split_percent),
+          "trainval": "train+validation",
+          "test": "test",
+          "train800": "train[:800]",
+          "val200": "validation[:200]",
+          "train800val200": "train[:800]+validation[:200]",
+      }
+      num_samples_splits = {
+          "train": (((train_count + val_count) // 100)
+                    * train_split_percent),
+          "val": (((train_count + val_count) // 100) *
+                  (100 - train_split_percent)),
+          "trainval": train_count + val_count,
+          "test": test_count,
+          "train800": 800,
+          "val200": 200,
+          "train800val200": 1000,
+      }
+    else:
+      tfds_splits = {
+          "train": "train",
+          "val": "validation",
+          "trainval": "train+validation",
+          "test": "test",
+          "train800": "train[:800]",
+          "val200": "validation[:200]",
+          "train800val200": "train[:800]+validation[:200]",
+      }
+      num_samples_splits = {
+          "train": train_count,
+          "val": val_count,
+          "trainval": train_count + val_count,
+          "test": test_count,
+          "train800": 800,
+          "val200": 200,
+          "train800val200": 1000,
+      }
 
     super(OxfordFlowers102Data, self).__init__(
         dataset_builder=dataset_builder,

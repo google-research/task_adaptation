@@ -19,10 +19,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+
 import abc
+import os
 import six
 from task_adaptation.data import base
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -62,6 +65,10 @@ class BaseDataTest(tf.test.TestCase):
     else:
       raise ValueError("`num_classes` must be either int or dict")
 
+  @property
+  def expected_splits(self):
+    return ("train", "val", "trainval", "test")
+
   def test_base_class(self):
     """Tests that the dataset wrapper inherits from base.ImageData."""
     self.assertIsInstance(self.data_wrapper, base.ImageData,
@@ -83,13 +90,14 @@ class BaseDataTest(tf.test.TestCase):
   def test_dataset_output(self):
     """Tests that the final tf.Dataset object has expected output shapes."""
     batch_size = 2
-    for split in ("train", "val", "trainval", "test"):
+    for split in self.expected_splits:
       tf_data = self.data_wrapper.get_tf_data(split, batch_size)
-      self.assertIsInstance(tf_data.output_shapes, dict)
+      tf_data_output_shapes = tf.data.get_output_shapes(tf_data)
+      self.assertIsInstance(tf_data_output_shapes, dict)
       for tensor_name, expected_shape in self.required_tensors_shapes.items():
-        self.assertIn(tensor_name, tf_data.output_shapes.keys())
+        self.assertIn(tensor_name, tf_data_output_shapes.keys())
         expected_shape = [batch_size] + list(expected_shape)
-        actual_shape = tf_data.output_shapes[tensor_name].as_list()
+        actual_shape = tf_data_output_shapes[tensor_name].as_list()
         self.assertEqual(
             actual_shape,
             expected_shape,
@@ -117,6 +125,17 @@ class BaseDataTest(tf.test.TestCase):
       self.assertEqual(
           num_classes, self.data_wrapper.get_num_classes(label_key),
           msg="Number of classes does not match for label \"%s\"" % label_key)
+
+  @classmethod
+  def iterate_dataset(cls, dataset, session):
+    dataset_iter = tf.compat.v1.data.make_initializable_iterator(dataset)
+    get_next = dataset_iter.get_next()
+    try:
+      session.run(dataset_iter.initializer)
+      while True:
+        yield session.run(get_next)
+    except tf.errors.OutOfRangeError:
+      pass
 
 
 class BaseTfdsDataTest(BaseDataTest):
@@ -197,3 +216,11 @@ class BaseTfdsDataTest(BaseDataTest):
       # pylint: enable=protected-access
       self.assertEqual(
           self.data_wrapper.get_num_classes(label_key), tfds_num_classes)
+
+
+class BaseVTABDataTest(BaseTfdsDataTest):
+
+  @property
+  def expected_splits(self):
+    return ("train", "val", "trainval", "test", "train800", "val200",
+            "train800val200")

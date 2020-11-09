@@ -20,10 +20,10 @@ from __future__ import division
 from __future__ import print_function
 from task_adaptation.data import data_testing_lib
 from task_adaptation.data import dtd
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
-class DTDDataTest(data_testing_lib.BaseTfdsDataTest):
+class DTDDataTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -35,6 +35,9 @@ class DTDDataTest(data_testing_lib.BaseTfdsDataTest):
             val=1880,
             trainval=1880 + 1880,
             test=1880,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),

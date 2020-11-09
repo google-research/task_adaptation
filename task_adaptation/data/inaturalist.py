@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implements Dmlab data class."""
+"""Implements INaturalist data class."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -23,51 +23,44 @@ from task_adaptation.registry import Registry
 import tensorflow_datasets as tfds
 
 
-@Registry.register("data.dmlab", "class")
-class DmlabData(base.ImageTfdsData):
-  """Dmlab dataset.
+TRAIN_SPLIT_PERCENT = 90
 
-      The Dmlab dataset contains frames observed by the agent acting in the
-      DMLab environment, which are annotated by the distance between
-      the agent and various objects present in the environment. The goal is to
-      is to evaluate the ability of a visual model to reason about distances
-      from the visual input in 3D environments. The Dmlab dataset consists of
-      360x480 color images in 6 classes. The classes are
-      {close, far, very far} x {positive reward, negative reward}
-      respectively.
-  """
 
-  def __init__(self, data_dir=None):
+@Registry.register("data.inaturalist", "class")
+class INaturalistData(base.ImageTfdsData):
+  """INaturalist dataset."""
 
-    dataset_builder = tfds.builder("dmlab:2.0.1", data_dir=data_dir)
+  def __init__(self, year=2017, data_dir=None):
+    supported_years = [2017]
+    if year not in supported_years:
+      raise ValueError(
+          "Only competitions from years {!r} are supported, but {!r} was given"
+          .format(supported_years, year))
+    dataset_builder = tfds.builder(
+        "i_naturalist{}:0.1.0".format(year), data_dir=data_dir)
 
     tfds_splits = {
-        "train": "train",
-        "val": "validation",
-        "trainval": "train+validation",
-        "test": "test",
-        "train800": "train[:800]",
-        "val200": "validation[:200]",
-        "train800val200": "train[:800]+validation[:200]",
+        "train": "train[:{}%]".format(TRAIN_SPLIT_PERCENT),
+        "val": "train[{}%:]".format(TRAIN_SPLIT_PERCENT),
+        "trainval": "train",
+        "test": "validation"
     }
 
     # Example counts are retrieved from the tensorflow dataset info.
-    train_count = dataset_builder.info.splits["train"].num_examples
-    val_count = dataset_builder.info.splits["validation"].num_examples
-    test_count = dataset_builder.info.splits["test"].num_examples
+    trainval_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
+    train_count = int(round(trainval_count * TRAIN_SPLIT_PERCENT / 100.0))
+    val_count = trainval_count - train_count
+    test_count = dataset_builder.info.splits[tfds.Split.VALIDATION].num_examples
 
     # Creates a dict with example counts for each split.
     num_samples_splits = {
         "train": train_count,
         "val": val_count,
-        "trainval": train_count + val_count,
-        "test": test_count,
-        "train800": 800,
-        "val200": 200,
-        "train800val200": 1000,
+        "trainval": trainval_count,
+        "test": test_count
     }
 
-    super(DmlabData, self).__init__(
+    super(INaturalistData, self).__init__(
         dataset_builder=dataset_builder,
         tfds_splits=tfds_splits,
         num_samples_splits=num_samples_splits,

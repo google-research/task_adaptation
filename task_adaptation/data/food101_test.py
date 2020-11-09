@@ -13,41 +13,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for svhn.py."""
+"""Tests for food101.py."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from task_adaptation.data import data_testing_lib
-from task_adaptation.data import svhn
+from task_adaptation.data import food101
 import tensorflow.compat.v1 as tf
 
 
-class SvhnTest(data_testing_lib.BaseVTABDataTest):
+class Food101Test(data_testing_lib.BaseTfdsDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
-    # The test scenarios have been defined in the base class
-    # data_testing_lib.BaseDataTest already, which tests the information
-    # provided in the setup function:
-    # classses, num, dataset_output, tfds_splits keys
-    super(SvhnTest, self).setUp(
-        data_wrapper=svhn.SvhnData(),
-        num_classes=10,
+    super(Food101Test, self).setUp(
+        data_wrapper=food101.Food101Data(),
+        num_classes=101,
         expected_num_samples=dict(
-            train=65931,
-            val=7326,
-            trainval=73257,
-            test=26032,
-            train800val200=1000,
-            train800=800,
-            val200=200,
+            train=68175,
+            val=7575,
+            trainval=75750,
+            test=25250,
         ),
         required_tensors_shapes={
-            "image": (32, 32, 3),
-            "label": (),
+            'image': (None, None, 3),
+            'label': (),
         })
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   tf.test.main()

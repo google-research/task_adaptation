@@ -22,10 +22,10 @@ from __future__ import print_function
 import collections
 from task_adaptation.data import caltech
 from task_adaptation.data import data_testing_lib
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
-class Caltech101Test(data_testing_lib.BaseTfdsDataTest):
+class Caltech101Test(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -38,6 +38,9 @@ class Caltech101Test(data_testing_lib.BaseTfdsDataTest):
             val=306,
             trainval=2754 + 306,  # 3060 (30 images / class).
             test=6084,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),
@@ -51,7 +54,7 @@ class Caltech101Test(data_testing_lib.BaseTfdsDataTest):
     # least one in the training set.
     ds = self.dataset.get_tf_data("val", batch_size=1, epochs=1)
     ds.repeat(1)
-    next_element = ds.make_one_shot_iterator().get_next()
+    next_element = tf.data.make_one_shot_iterator(ds).get_next()
     class_count = collections.defaultdict(int)
     with tf.Session() as sess:
       while True:

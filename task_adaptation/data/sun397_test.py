@@ -20,10 +20,10 @@ from __future__ import division
 from __future__ import print_function
 from task_adaptation.data import data_testing_lib
 from task_adaptation.data import sun397
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
-class Sun397Test(data_testing_lib.BaseTfdsDataTest):
+class Sun397Test(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -35,6 +35,9 @@ class Sun397Test(data_testing_lib.BaseTfdsDataTest):
             val=10875,
             trainval=10875 + 76128,
             test=21750,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),

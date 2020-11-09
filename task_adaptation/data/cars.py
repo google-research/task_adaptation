@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implements the Describable Textures Dataset (DTD) data class."""
+"""Implements the Stanford Cars data class."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -22,48 +22,37 @@ import task_adaptation.data.base as base
 from task_adaptation.registry import Registry
 import tensorflow_datasets as tfds
 
+TRAIN_SPLIT_PERCENT = 80
 
-@Registry.register("data.dtd", "class")
-class DTDData(base.ImageTfdsData):
-  """Provides Describable Textures Dataset (DTD) data.
 
-  As of version 1.0.0, the train/val/test splits correspond to those of the
-  1st fold of the official cross-validation partition.
+@Registry.register("data.cars", "class")
+class CarsData(base.ImageTfdsData):
+  """Provides Stanford Cars data.
 
   For additional details and usage, see the base class.
   """
 
   def __init__(self, data_dir=None):
 
-    dataset_builder = tfds.builder("dtd:3.*.*", data_dir=data_dir)
+    dataset_builder = tfds.builder("cars196:2.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
 
     # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {
-        "train": "train",
-        "val": "validation",
-        "trainval": "train+validation",
-        "test": "test",
-        "train800": "train[:800]",
-        "val200": "validation[:200]",
-        "train800val200": "train[:800]+validation[:200]",
-    }
+    tfds_splits = {}
+    tfds_splits["train"] = "train[:{}%]".format(TRAIN_SPLIT_PERCENT)
+    tfds_splits["val"] = "train[{}%:]".format(TRAIN_SPLIT_PERCENT)
+    tfds_splits["trainval"] = "train"
+    tfds_splits["test"] = "test"
 
     # Creates a dict with example counts for each split.
-    train_count = dataset_builder.info.splits["train"].num_examples
-    val_count = dataset_builder.info.splits["validation"].num_examples
+    num_samples_splits = {}
+    trainval_count = dataset_builder.info.splits["train"].num_examples
     test_count = dataset_builder.info.splits["test"].num_examples
-    num_samples_splits = {
-        "train": train_count,
-        "val": val_count,
-        "trainval": train_count + val_count,
-        "test": test_count,
-        "train800": 800,
-        "val200": 200,
-        "train800val200": 1000,
-    }
-
-    super(DTDData, self).__init__(
+    num_samples_splits["train"] = (TRAIN_SPLIT_PERCENT * trainval_count) // 100
+    num_samples_splits["val"] = trainval_count - num_samples_splits["train"]
+    num_samples_splits["trainval"] = trainval_count
+    num_samples_splits["test"] = test_count
+    super(CarsData, self).__init__(
         dataset_builder=dataset_builder,
         tfds_splits=tfds_splits,
         num_samples_splits=num_samples_splits,

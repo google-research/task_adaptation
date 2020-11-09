@@ -13,38 +13,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for svhn.py."""
+"""Tests for cub.py."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+from task_adaptation.data import cub
 from task_adaptation.data import data_testing_lib
-from task_adaptation.data import svhn
 import tensorflow.compat.v1 as tf
 
 
-class SvhnTest(data_testing_lib.BaseVTABDataTest):
+class CUB2011DataTest(data_testing_lib.BaseTfdsDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
-    # The test scenarios have been defined in the base class
-    # data_testing_lib.BaseDataTest already, which tests the information
-    # provided in the setup function:
-    # classses, num, dataset_output, tfds_splits keys
-    super(SvhnTest, self).setUp(
-        data_wrapper=svhn.SvhnData(),
-        num_classes=10,
+    self.dataset = cub.CUB2011Data()
+    super(CUB2011DataTest, self).setUp(
+        data_wrapper=self.dataset,
+        num_classes=200,
         expected_num_samples=dict(
-            train=65931,
-            val=7326,
-            trainval=73257,
-            test=26032,
-            train800val200=1000,
-            train800=800,
-            val200=200,
+            train=5395,
+            val=599,
+            trainval=5994,
+            test=5794,
         ),
         required_tensors_shapes={
-            "image": (32, 32, 3),
+            "image": (None, None, 3),
             "label": (),
         })
 

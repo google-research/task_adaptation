@@ -28,7 +28,7 @@ import tensorflow_datasets as tfds
 TRAIN_SPLIT_PERCENT = 90
 
 
-@Registry.register("data.cifar", "object")
+@Registry.register("data.cifar", "class")
 class CifarData(base.ImageTfdsData):
   """Provides Cifar10 or Cifar100 data.
 
@@ -40,7 +40,7 @@ class CifarData(base.ImageTfdsData):
   For additional details and usage, see the base class.
   """
 
-  def __init__(self, num_classes=10, data_dir=None):
+  def __init__(self, num_classes=10, data_dir=None, train_split_percent=None):
 
     if num_classes == 10:
       dataset_builder = tfds.builder("cifar10:3.*.*", data_dir=data_dir)
@@ -52,21 +52,33 @@ class CifarData(base.ImageTfdsData):
 
     dataset_builder.download_and_prepare()
 
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {}
-    tfds_splits["train"] = "train[:{}%]".format(TRAIN_SPLIT_PERCENT)
-    tfds_splits["val"] = "train[{}%:]".format(TRAIN_SPLIT_PERCENT)
-    tfds_splits["trainval"] = "train"
-    tfds_splits["test"] = "test"
+    train_split_percent = train_split_percent or TRAIN_SPLIT_PERCENT
 
     # Creates a dict with example counts for each split.
-    num_samples_splits = {}
-    trainval_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
-    test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
-    num_samples_splits["train"] = (TRAIN_SPLIT_PERCENT * trainval_count) // 100
-    num_samples_splits["val"] = trainval_count - num_samples_splits["train"]
-    num_samples_splits["trainval"] = trainval_count
-    num_samples_splits["test"] = test_count
+    trainval_count = dataset_builder.info.splits["train"].num_examples
+    test_count = dataset_builder.info.splits["test"].num_examples
+    num_samples_splits = {
+        "train": (train_split_percent * trainval_count) // 100,
+        "val": trainval_count - (train_split_percent * trainval_count) // 100,
+        "trainval": trainval_count,
+        "test": test_count,
+        "train800": 800,
+        "val200": 200,
+        "train800val200": 1000,
+    }
+
+    # Defines dataset specific train/val/trainval/test splits.
+    tfds_splits = {
+        "train": "train[:{}]".format(num_samples_splits["train"]),
+        "val": "train[{}:]".format(num_samples_splits["train"]),
+        "trainval": "train",
+        "test": "test",
+        "train800": "train[:800]",
+        "val200": "train[{}:{}]".format(
+            num_samples_splits["train"], num_samples_splits["train"]+200),
+        "train800val200": "train[:800]+train[{}:{}]".format(
+            num_samples_splits["train"], num_samples_splits["train"]+200),
+    }
 
     super(CifarData, self).__init__(
         dataset_builder=dataset_builder,
@@ -75,5 +87,5 @@ class CifarData(base.ImageTfdsData):
         num_preprocessing_threads=400,
         shuffle_buffer_size=10000,
         # Note: Export only image and label tensors with their original types.
-        base_preprocess_fn=base.make_get_tensors_fn(["image", "label"]),
+        base_preprocess_fn=base.make_get_tensors_fn(["image", "label", "id"]),
         num_classes=dataset_builder.info.features["label"].num_classes)

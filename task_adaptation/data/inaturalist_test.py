@@ -13,38 +13,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for svhn.py."""
+# Lint as: python3
+"""Tests for inaturalist.py."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 from task_adaptation.data import data_testing_lib
-from task_adaptation.data import svhn
+from task_adaptation.data import inaturalist
 import tensorflow.compat.v1 as tf
 
 
-class SvhnTest(data_testing_lib.BaseVTABDataTest):
-  """See base class for usage and test descriptions."""
+class INaturalistTest(data_testing_lib.BaseTfdsDataTest):
 
   def setUp(self):
-    # The test scenarios have been defined in the base class
-    # data_testing_lib.BaseDataTest already, which tests the information
-    # provided in the setup function:
-    # classses, num, dataset_output, tfds_splits keys
-    super(SvhnTest, self).setUp(
-        data_wrapper=svhn.SvhnData(),
-        num_classes=10,
+    super(INaturalistTest, self).setUp(
+        data_wrapper=inaturalist.INaturalistData(),
+        num_classes=5089,
         expected_num_samples=dict(
-            train=65931,
-            val=7326,
-            trainval=73257,
-            test=26032,
-            train800val200=1000,
-            train800=800,
-            val200=200,
+            train=521266,
+            val=57918,
+            trainval=579184,
+            test=95986,
         ),
         required_tensors_shapes={
-            "image": (32, 32, 3),
+            "image": (None, None, 3),
             "label": (),
         })
 

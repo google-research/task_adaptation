@@ -25,14 +25,17 @@ import tempfile
 from absl.testing import absltest
 from task_adaptation import loop
 from task_adaptation import test_utils
+import tensorflow.compat.v1 as tf
 
 
-class LoopTest(absltest.TestCase):
+class LoopTest(tf.test.TestCase):
 
   def test_run_training_loop(self):
+    module_path = os.path.join(self.get_temp_dir(), "module")
+    test_utils.create_dummy_hub_model(module_path, num_outputs=10)
     tmp_dir = tempfile.mkdtemp()
     loop.run_training_loop(
-        hub_module=test_utils.create_dummy_hub_module(num_outputs=10),
+        hub_module=module_path,
         hub_module_signature=None,
         work_dir=tmp_dir,
         tpu_name=None,

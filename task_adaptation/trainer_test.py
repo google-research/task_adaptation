@@ -23,7 +23,7 @@ from absl.testing import absltest
 
 import task_adaptation.trainer as trainer
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 class ModelTest(absltest.TestCase):

@@ -22,12 +22,8 @@ from __future__ import print_function
 import numpy as np
 import task_adaptation.data.base as base
 from task_adaptation.registry import Registry
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
-
-TRAIN_SPLIT_PERCENT = 80
-VALIDATION_SPLIT_PERCENT = 10
-TEST_SPLIT_PERCENT = 10
 
 
 def _count_all_pp(x):
@@ -155,7 +151,7 @@ _TASK_DICT = {
 }
 
 
-@Registry.register("data.kitti", "object")
+@Registry.register("data.kitti", "class")
 class KittiData(base.ImageTfdsData):
   """Provides Kitti dataset.
 
@@ -181,19 +177,24 @@ class KittiData(base.ImageTfdsData):
         "val": "validation",
         "trainval": "train+validation",
         "test": "test",
+        "train800": "train[:800]",
+        "val200": "validation[:200]",
+        "train800val200": "train[:800]+validation[:200]",
     }
 
     # Example counts are retrieved from the tensorflow dataset info.
-    num_examples = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
-    train_count = num_examples * TRAIN_SPLIT_PERCENT // 100
-    val_count = num_examples * VALIDATION_SPLIT_PERCENT // 100
-    test_count = num_examples * TEST_SPLIT_PERCENT // 100
+    train_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
+    val_count = dataset_builder.info.splits[tfds.Split.VALIDATION].num_examples
+    test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
     # Creates a dict with example counts for each split.
     num_samples_splits = {
         "train": train_count,
         "val": val_count,
         "trainval": train_count + val_count,
-        "test": test_count
+        "test": test_count,
+        "train800": 800,
+        "val200": 200,
+        "train800val200": 1000,
     }
 
     task = _TASK_DICT[task]

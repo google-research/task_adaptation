@@ -19,10 +19,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 
 import task_adaptation.trainer as trainer
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_hub as hub
 
 
@@ -39,12 +40,21 @@ def model_fn(features, mode, params):
   warmup_steps = params["warmup_steps"]
 
   is_training = (mode == tf.estimator.ModeKeys.TRAIN)
-  module = hub.Module(hub_module,
-                      trainable=is_training,
-                      tags={"train"} if is_training else None)
-  pre_logits = module(features["image"],
-                      signature=params["hub_module_signature"],
-                      as_dict=True)[finetune_layer]
+  module_path = hub.resolve(hub_module)
+  is_legacy_hub_module = tf.io.gfile.exists(
+      os.path.join(module_path, "tfhub_module.pb"))
+  if is_legacy_hub_module:
+    module = hub.Module(hub_module,
+                        trainable=is_training,
+                        tags={"train"} if is_training else None)
+    pre_logits = module(features["image"],
+                        signature=params["hub_module_signature"],
+                        as_dict=True)[finetune_layer]
+  else:
+    module = hub.load(hub_module)
+    tf.get_collection_ref(tf.GraphKeys.TRAINABLE_VARIABLES).extend(
+        module.trainable_variables)
+    pre_logits = module(features["image"], training=is_training)
 
   num_dim_pre_logits = len(pre_logits.get_shape().as_list())
   if num_dim_pre_logits == 4:

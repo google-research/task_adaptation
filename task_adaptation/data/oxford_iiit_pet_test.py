@@ -20,10 +20,10 @@ from __future__ import division
 from __future__ import print_function
 from task_adaptation.data import data_testing_lib
 from task_adaptation.data import oxford_iiit_pet
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
-class OxfordIIITPetDataTest(data_testing_lib.BaseTfdsDataTest):
+class OxfordIIITPetDataTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -35,6 +35,9 @@ class OxfordIIITPetDataTest(data_testing_lib.BaseTfdsDataTest):
             val=736,
             trainval=3680,
             test=3669,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),

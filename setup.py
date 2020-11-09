@@ -24,7 +24,7 @@ setup(
     description=(
         'Task Adaptation - a package for evaluating visual models.'),
     author='Google LLC',
-    author_email='task-adaptationy@google.com',
+    author_email='task-adaptation@google.com',
     url='https://github.com/google/task_adaptation',
     license='Apache 2.0',
     packages=find_packages(),

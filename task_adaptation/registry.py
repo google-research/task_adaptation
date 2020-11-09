@@ -23,8 +23,6 @@ from __future__ import print_function
 import ast
 import functools
 
-from absl import logging
-
 
 def partialclass(cls, *base_args, **base_kwargs):
   """Builds a subclass with partial application of the given args and keywords.
@@ -122,8 +120,7 @@ class Registry(object):
   @staticmethod
   def register(name, item_type):
     """Creates a function that registers its input."""
-
-    if item_type not in ["object", "function", "factory", "class"]:
+    if item_type not in ["function", "class"]:
       raise ValueError("Unknown item type: %s" % item_type)
 
     def _register(item):
@@ -147,26 +144,5 @@ class Registry(object):
     item, item_type = Registry.global_registry()[name]
     if item_type == "function":
       return functools.partial(item, **kwargs)
-    elif item_type == "object":
-      return item(**kwargs)
-    elif item_type == "factory":
-
-      def _factory_fn(*class_args, **class_kwargs):
-        """A factory function that creates objects of the registered class."""
-        for k, v in kwargs.items():
-          if k in class_kwargs:
-            # Note: This is the same behavior as functools.partial, but we give
-            # a warning to prevent future headaches.
-            logging.warning(
-                "The default kwarg %r=%r, used in the lookup string %r, "
-                "is overridden by the call to the resulting factory. "
-                "Notice that this may lead to some unexpected behavior.",
-                k, v, lookup_string)
-          else:
-            class_kwargs[k] = v
-
-        return item(*class_args, **class_kwargs)
-
-      return _factory_fn
     elif item_type == "class":
       return partialclass(item, **kwargs)

@@ -23,7 +23,7 @@ from absl.testing import absltest
 from task_adaptation import data_loader
 from task_adaptation import test_utils
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 class DataLoaderTest(absltest.TestCase):

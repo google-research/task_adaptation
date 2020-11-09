@@ -20,11 +20,11 @@ from __future__ import division
 from __future__ import print_function
 
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_hub as hub
 
 
-def create_dummy_hub_module(num_outputs):
+def create_dummy_hub_model(path, num_outputs):
   """Creates minimal hub module for testing purposes."""
 
   def module_fn(is_training):
@@ -35,10 +35,47 @@ def create_dummy_hub_module(num_outputs):
     y = tf.layers.dense(h, num_outputs)
     hub.add_signature(inputs=x, outputs={"pre_logits": h, "logits": y})
 
-  return hub.create_module_spec(
+  spec = hub.create_module_spec(
       module_fn,
-      tags_and_args=[({"train"}, {"is_training": True}),
-                     (set(), {"is_training": False})])
+      tags_and_args=[({"train"}, {
+          "is_training": True
+      }), (set(), {
+          "is_training": False
+      })])
+  m = hub.Module(spec, name="module")
+  with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    m.export(path, sess)
+
+
+def create_dummy_saved_model(path):
+  """Creates minimal saved model for testing purposes."""
+
+  class ImageModel(tf.train.Checkpoint):
+    """Dummy image model."""
+
+    def __init__(self):
+      super(ImageModel, self).__init__()
+      self.v = tf.Variable(1., use_resource=True)
+
+    @tf.function(input_signature=[
+        tf.TensorSpec(name="input", shape=[32, 224, 224, 3], dtype=tf.float32),
+        tf.TensorSpec(name="training", shape=None, dtype=tf.bool),
+    ])
+    def __call__(self, x, training):
+      return tf.reduce_mean(x, axis=[1, 2]) + self.v
+
+  with tf.Session() as sess:
+    model = ImageModel()
+
+    # Explicitly reference save_counter so that is initialized before saving
+    # the model.
+    model.save_counter  # pylint: disable=pointless-statement
+
+    model.trainable_variables = [model.v]
+    init = tf.initialize_all_variables()
+    sess.run(init)
+    tf.compat.v2.saved_model.save(model, path)
 
 
 def get_data_params():

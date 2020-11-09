@@ -22,7 +22,7 @@ from __future__ import print_function
 import numpy as np
 import task_adaptation.data.base as base
 from task_adaptation.registry import Registry
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 
 
@@ -69,7 +69,7 @@ _TASK_DICT = {
 }
 
 
-@Registry.register("data.clevr", "object")
+@Registry.register("data.clevr", "class")
 class CLEVRData(base.ImageTfdsData):
   """Provides CLEVR dataset.
 
@@ -86,21 +86,31 @@ class CLEVRData(base.ImageTfdsData):
     dataset_builder = tfds.builder("clevr:3.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
 
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {}
-    tfds_splits["train"] = "train[:{}%]".format(TRAIN_SPLIT_PERCENT)
-    tfds_splits["val"] = "train[{}%:]".format(TRAIN_SPLIT_PERCENT)
-    tfds_splits["trainval"] = "train"
-    tfds_splits["test"] = "validation"
-
     # Creates a dict with example counts for each split.
-    num_samples_splits = {}
     trainval_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
     test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
-    num_samples_splits["train"] = (TRAIN_SPLIT_PERCENT * trainval_count) // 100
-    num_samples_splits["val"] = trainval_count - num_samples_splits["train"]
-    num_samples_splits["trainval"] = trainval_count
-    num_samples_splits["test"] = test_count
+    num_samples_splits = {
+        "train": (TRAIN_SPLIT_PERCENT * trainval_count) // 100,
+        "val": trainval_count - (TRAIN_SPLIT_PERCENT * trainval_count) // 100,
+        "trainval": trainval_count,
+        "test": test_count,
+        "train800": 800,
+        "val200": 200,
+        "train800val200": 1000,
+    }
+
+    # Defines dataset specific train/val/trainval/test splits.
+    tfds_splits = {
+        "train": "train[:{}]".format(num_samples_splits["train"]),
+        "val": "train[{}:]".format(num_samples_splits["train"]),
+        "trainval": "train",
+        "test": "validation",
+        "train800": "train[:800]",
+        "val200": "train[{}:{}]".format(
+            num_samples_splits["train"], num_samples_splits["train"]+200),
+        "train800val200": "train[:800]+train[{}:{}]".format(
+            num_samples_splits["train"], num_samples_splits["train"]+200),
+    }
 
     task = _TASK_DICT[task]
     base_preprocess_fn = task["preprocess_fn"]

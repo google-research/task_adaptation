@@ -22,10 +22,10 @@ from __future__ import print_function
 import mock
 from task_adaptation.data import data_testing_lib
 from task_adaptation.data import diabetic_retinopathy
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
-class RetinopathyTest(data_testing_lib.BaseTfdsDataTest):
+class RetinopathyTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -37,6 +37,9 @@ class RetinopathyTest(data_testing_lib.BaseTfdsDataTest):
             val=10906,
             trainval=35126 + 10906,
             test=42670,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),

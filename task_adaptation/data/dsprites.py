@@ -20,7 +20,7 @@ from __future__ import division
 from __future__ import print_function
 import task_adaptation.data.base as base
 from task_adaptation.registry import Registry
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 
 # These constants specify the percentage of data that is used to create custom
@@ -31,7 +31,7 @@ TRAIN_SPLIT_PERCENT = 80
 VAL_SPLIT_PERCENT = 10
 
 
-@Registry.register("data.dsprites", "object")
+@Registry.register("data.dsprites", "class")
 class DSpritesData(base.ImageTfdsData):
   """Provides the DSprites data set.
 
@@ -64,18 +64,8 @@ class DSpritesData(base.ImageTfdsData):
           "The number of classes should be None or in [2, ..., num_classes].")
     class_division_factor = float(num_original_classes) / num_classes
 
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {}
-    tfds_splits["train"] = "train[:{}%]".format(TRAIN_SPLIT_PERCENT)
-    tfds_splits["val"] = "train[{}%:{}%]".format(
-        TRAIN_SPLIT_PERCENT, TRAIN_SPLIT_PERCENT + VAL_SPLIT_PERCENT)
-    tfds_splits["trainval"] = "train[:{}%]".format(TRAIN_SPLIT_PERCENT +
-                                                   VAL_SPLIT_PERCENT)
-    tfds_splits["test"] = "train[{}%:]".format(TRAIN_SPLIT_PERCENT +
-                                               VAL_SPLIT_PERCENT)
-
     # Creates a dict with example counts for each split.
-    num_total = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
+    num_total = dataset_builder.info.splits["train"].num_examples
     num_samples_train = TRAIN_SPLIT_PERCENT * num_total // 100
     num_samples_val = VAL_SPLIT_PERCENT * num_total // 100
     num_samples_splits = {
@@ -83,6 +73,23 @@ class DSpritesData(base.ImageTfdsData):
         "val": num_samples_val,
         "trainval": num_samples_val + num_samples_train,
         "test": num_total - num_samples_val - num_samples_train,
+        "train800": 800,
+        "val200": 200,
+        "train800val200": 1000,
+    }
+
+    # Defines dataset specific train/val/trainval/test splits.
+    tfds_splits = {
+        "train": "train[:{}]".format(num_samples_splits["train"]),
+        "val": "train[{}:{}]".format(num_samples_splits["train"],
+                                     num_samples_splits["trainval"]),
+        "trainval": "train[:{}]".format(num_samples_splits["trainval"]),
+        "test": "train[{}:]".format(num_samples_splits["trainval"]),
+        "train800": "train[:800]",
+        "val200": "train[{}:{}]".format(num_samples_splits["train"],
+                                        num_samples_splits["train"]+200),
+        "train800val200": "train[:800]+train[{}:{}]".format(
+            num_samples_splits["train"], num_samples_splits["train"]+200),
     }
 
     def preprocess_fn(tensors):

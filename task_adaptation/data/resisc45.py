@@ -27,7 +27,7 @@ VALIDATION_SPLIT_PERCENT = 20
 TEST_SPLIT_PERCENT = 20
 
 
-@Registry.register("data.resisc45", "object")
+@Registry.register("data.resisc45", "class")
 class Resisc45Data(base.ImageTfdsData):
   """Provides RESISC-45 dataset.
 
@@ -43,33 +43,38 @@ class Resisc45Data(base.ImageTfdsData):
     dataset_builder = tfds.builder("resisc45:3.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
 
-    tfds_splits = {
-        "train":
-            "train[:{}%]".format(TRAIN_SPLIT_PERCENT),
-        "val":
-            "train[{}%:{}%]".format(
-                TRAIN_SPLIT_PERCENT,
-                TRAIN_SPLIT_PERCENT + VALIDATION_SPLIT_PERCENT),
-        "trainval":
-            "train[:{}%]".format(TRAIN_SPLIT_PERCENT +
-                                 VALIDATION_SPLIT_PERCENT),
-        "test":
-            "train[{}%:]".format(TRAIN_SPLIT_PERCENT +
-                                 VALIDATION_SPLIT_PERCENT),
-    }
-
     # Example counts are retrieved from the tensorflow dataset info.
-    num_examples = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
+    num_examples = dataset_builder.info.splits["train"].num_examples
     train_count = num_examples * TRAIN_SPLIT_PERCENT // 100
     val_count = num_examples * VALIDATION_SPLIT_PERCENT // 100
     test_count = num_examples * TEST_SPLIT_PERCENT // 100
+
+    tfds_splits = {
+        "train":
+            "train[:{}]".format(train_count),
+        "val":
+            "train[{}:{}]".format(train_count, train_count + val_count),
+        "trainval":
+            "train[:{}]".format(train_count + val_count),
+        "test":
+            "train[{}:]".format(train_count + val_count),
+        "train800":
+            "train[:800]",
+        "val200":
+            "train[{}:{}]".format(train_count, train_count+200),
+        "train800val200":
+            "train[:800]+train[{}:{}]".format(train_count, train_count+200),
+    }
 
     # Creates a dict with example counts for each split.
     num_samples_splits = {
         "train": train_count,
         "val": val_count,
         "trainval": train_count + val_count,
-        "test": test_count
+        "test": test_count,
+        "train800": 800,
+        "val200": 200,
+        "train800val200": 1000,
     }
 
     super(Resisc45Data, self).__init__(

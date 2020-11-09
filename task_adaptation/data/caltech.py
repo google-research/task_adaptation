@@ -28,7 +28,7 @@ import tensorflow_datasets as tfds
 _TRAIN_SPLIT_PERCENT = 90
 
 
-@Registry.register("data.caltech101", "object")
+@Registry.register("data.caltech101", "class")
 class Caltech101(base.ImageTfdsData):
   """Provides the Caltech101 dataset.
 
@@ -47,26 +47,34 @@ class Caltech101(base.ImageTfdsData):
   "val" and "test" sets should be expected.
   """
 
-  def __init__(self, num_classes=10, data_dir=None):
+  def __init__(self, data_dir=None):
     dataset_builder = tfds.builder("caltech101:3.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
 
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {}
-    tfds_splits["train"] = "train[:{}%]".format(_TRAIN_SPLIT_PERCENT)
-    tfds_splits["val"] = "train[{}%:]".format(_TRAIN_SPLIT_PERCENT)
-    tfds_splits["trainval"] = "train"
-    tfds_splits["test"] = "test"
-
     # Creates a dict with example counts for each split.
-    trainval_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
+    trainval_count = dataset_builder.info.splits["train"].num_examples
     train_count = (_TRAIN_SPLIT_PERCENT * trainval_count) // 100
-    test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
+    test_count = dataset_builder.info.splits["test"].num_examples
     num_samples_splits = dict(
         train=train_count,
         val=trainval_count - train_count,
         trainval=trainval_count,
-        test=test_count)
+        test=test_count,
+        train800=800,
+        val200=200,
+        train800val200=1000)
+
+    # Defines dataset specific train/val/trainval/test splits.
+    tfds_splits = {
+        "train": "train[:{}]".format(train_count),
+        "val": "train[{}:]".format(train_count),
+        "trainval": "train",
+        "test": "test",
+        "train800": "train[:800]",
+        "val200": "train[{}:{}]".format(train_count, train_count+200),
+        "train800val200": (
+            "train[:800]+train[{}:{}]".format(train_count, train_count+200)),
+    }
 
     super(Caltech101, self).__init__(
         dataset_builder=dataset_builder,

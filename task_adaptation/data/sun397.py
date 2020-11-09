@@ -27,7 +27,7 @@ CUSTOM_VALIDATION_SPLIT_PERCENT = 20
 CUSTOM_TEST_SPLIT_PERCENT = 30
 
 
-@Registry.register("data.sun397", "object")
+@Registry.register("data.sun397", "class")
 class Sun397Data(base.ImageTfdsData):
   """Provides Sun397Data data."""
 
@@ -42,12 +42,18 @@ class Sun397Data(base.ImageTfdsData):
           "val": "validation",
           "test": "test",
           "trainval": "train+validation",
+          "train800": "train[:800]",
+          "val200": "validation[:200]",
+          "train800val200": "train[:800]+validation[:200]",
       }
       # Creates a dict with example counts.
       num_samples_splits = {
           "test": dataset_builder.info.splits["test"].num_examples,
           "train": dataset_builder.info.splits["train"].num_examples,
           "val": dataset_builder.info.splits["validation"].num_examples,
+          "train800": 800,
+          "val200": 200,
+          "train800val200": 1000,
       }
       num_samples_splits["trainval"] = (
           num_samples_splits["train"] + num_samples_splits["val"])

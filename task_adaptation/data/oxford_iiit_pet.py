@@ -28,7 +28,7 @@ import tensorflow_datasets as tfds
 TRAIN_SPLIT_PERCENT = 80
 
 
-@Registry.register("data.oxford_iiit_pet", "object")
+@Registry.register("data.oxford_iiit_pet", "class")
 class OxfordIIITPetData(base.ImageTfdsData):
   """Provides OxfordIIITPet data.
 
@@ -40,26 +40,37 @@ class OxfordIIITPetData(base.ImageTfdsData):
   For additional details and usage, see the base class.
   """
 
-  def __init__(self, data_dir=None):
+  def __init__(self, data_dir=None, train_split_percent=None):
 
     dataset_builder = tfds.builder("oxford_iiit_pet:3.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
-
-    # Defines dataset specific train/val/trainval/test splits.
-    tfds_splits = {}
-    tfds_splits["train"] = "train[:{}%]".format(TRAIN_SPLIT_PERCENT)
-    tfds_splits["val"] = "train[{}%:]".format(TRAIN_SPLIT_PERCENT)
-    tfds_splits["trainval"] = tfds.Split.TRAIN
-    tfds_splits["test"] = tfds.Split.TEST
+    train_split_percent = train_split_percent or TRAIN_SPLIT_PERCENT
 
     # Creates a dict with example counts for each split.
-    num_samples_splits = {}
     trainval_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
     test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
-    num_samples_splits["train"] = (TRAIN_SPLIT_PERCENT * trainval_count) // 100
-    num_samples_splits["val"] = trainval_count - num_samples_splits["train"]
-    num_samples_splits["trainval"] = trainval_count
-    num_samples_splits["test"] = test_count
+    num_samples_splits = {
+        "train": (train_split_percent * trainval_count) // 100,
+        "val": trainval_count - (train_split_percent * trainval_count) // 100,
+        "trainval": trainval_count,
+        "test": test_count,
+        "train800": 800,
+        "val200": 200,
+        "train800val200": 1000,
+    }
+
+    # Defines dataset specific train/val/trainval/test splits.
+    tfds_splits = {
+        "train": "train[:{}]".format(num_samples_splits["train"]),
+        "val": "train[{}:]".format(num_samples_splits["train"]),
+        "trainval": tfds.Split.TRAIN,
+        "test": tfds.Split.TEST,
+        "train800": "train[:800]",
+        "val200": "train[{}:{}]".format(
+            num_samples_splits["train"], num_samples_splits["train"]+200),
+        "train800val200": "train[:800]+train[{}:{}]".format(
+            num_samples_splits["train"], num_samples_splits["train"]+200),
+    }
 
     super(OxfordIIITPetData, self).__init__(
         dataset_builder=dataset_builder,

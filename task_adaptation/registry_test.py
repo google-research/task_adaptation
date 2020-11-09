@@ -72,21 +72,17 @@ class RegistryTest(absltest.TestCase):
     def func1():
       pass
 
-    @registry.Registry.register("A", "object")
+    @registry.Registry.register("A", "class")
     class A(object):
       pass
 
-    @registry.Registry.register("B", "factory")
-    class B(object):
-      pass
-
     with self.assertRaises(KeyError):
-      @registry.Registry.register("A", "factory")
+      @registry.Registry.register("A", "class")
       class A1(object):
         pass
     # pylint: enable=unused-variable
 
-    self.assertLen(registry.Registry.global_registry(), 3)
+    self.assertLen(registry.Registry.global_registry(), 2)
 
   def test_lookup_function(self):
 
@@ -104,9 +100,9 @@ class RegistryTest(absltest.TestCase):
         registry.Registry.lookup("func1(arg2=9,arg1=99)")(arg1=1, arg3=3),
         (1, 9, 3))
 
-  def test_lookup_object(self):
+  def test_lookup_class(self):
 
-    @registry.Registry.register("A", "object")
+    @registry.Registry.register("A", "class")
     class A(object):
 
       def __init__(self, arg1, arg2=2):
@@ -116,34 +112,11 @@ class RegistryTest(absltest.TestCase):
       def as_tuple(self):
         return (self.arg1, self.arg2)
 
-    self.assertIsInstance(registry.Registry.lookup("A(arg1=25)"), A)
-    self.assertEqual(registry.Registry.lookup("A(arg1=25)").as_tuple(), (25, 2))
-    self.assertEqual(
-        registry.Registry.lookup("A(arg1=8, arg2=9)").as_tuple(), (8, 9))
-
-  def test_lookup_factory(self):
-
-    @registry.Registry.register("A", "factory")  # pylint: disable=unused-variable
-    class A(object):
-
-      def __init__(self, arg1, arg2=2):
-        self.arg1 = arg1
-        self.arg2 = arg2
-
-      def as_tuple(self):
-        return (self.arg1, self.arg2)
-
-    self.assertTrue(callable(registry.Registry.lookup("A(arg1=25)")))
+    self.assertIsInstance(registry.Registry.lookup("A(arg1=25)")(), A)
     self.assertEqual(
         registry.Registry.lookup("A(arg1=25)")().as_tuple(), (25, 2))
     self.assertEqual(
-        registry.Registry.lookup("A")(arg1=25).as_tuple(), (25, 2))
-    self.assertEqual(
-        registry.Registry.lookup("A(arg1=9)")(arg2=8).as_tuple(), (9, 8))
-    self.assertEqual(
-        registry.Registry.lookup("A(arg1=8,arg2=9)")().as_tuple(), (8, 9))
-    self.assertEqual(
-        registry.Registry.lookup("A(arg1=8,arg2=9)")(arg1=7).as_tuple(), (7, 9))
+        registry.Registry.lookup("A(arg1=8, arg2=9)")().as_tuple(), (8, 9))
 
 if __name__ == "__main__":
   absltest.main()

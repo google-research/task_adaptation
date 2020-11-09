@@ -20,7 +20,7 @@ from __future__ import division
 from __future__ import print_function
 import task_adaptation.data.base as base
 from task_adaptation.registry import Registry
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 
 # This constant specifies the percentage of data that is used to create custom
@@ -29,7 +29,7 @@ import tensorflow_datasets as tfds
 VAL_SPLIT_PERCENT = 50
 
 
-@Registry.register("data.smallnorb", "object")
+@Registry.register("data.smallnorb", "class")
 class SmallNORBData(base.ImageTfdsData):
   """Provides the SmallNORB data set.
 
@@ -57,17 +57,23 @@ class SmallNORBData(base.ImageTfdsData):
         "val": "test[:{}%]".format(VAL_SPLIT_PERCENT),
         "trainval": "train+test[:{}%]".format(VAL_SPLIT_PERCENT),
         "test": "test[{}%:]".format(VAL_SPLIT_PERCENT),
+        "train800": "train[:800]",
+        "val200": "test[:200]",
+        "train800val200": "train[:800]+test[:200]",
     }
 
     # Creates a dict with example counts for each split.
-    train_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
-    test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
+    train_count = dataset_builder.info.splits["train"].num_examples
+    test_count = dataset_builder.info.splits["test"].num_examples
     num_samples_validation = VAL_SPLIT_PERCENT * test_count // 100
     num_samples_splits = {
         "train": train_count,
         "val": num_samples_validation,
         "trainval": train_count + num_samples_validation,
         "test": test_count - num_samples_validation,
+        "train800": 800,
+        "val200": 200,
+        "train800val200": 1000,
     }
 
     def preprocess_fn(tensors):

@@ -13,28 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for imagenet.py."""
+"""Tests for cars.py."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from task_adaptation.data import cars
 from task_adaptation.data import data_testing_lib
-from task_adaptation.data import imagenet
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
-class ImagenetTest(data_testing_lib.BaseTfdsDataTest):
+class CarsDataTest(data_testing_lib.BaseTfdsDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
-    super(ImagenetTest, self).setUp(
-        data_wrapper=imagenet.ImageNetData(),
-        num_classes=1000,
+    super(CarsDataTest, self).setUp(
+        data_wrapper=cars.CarsData(),
+        num_classes=196,
         expected_num_samples=dict(
-            train=1229920,
-            val=51247,
-            trainval=1281167,
-            test=50000,
+            train=6515,
+            val=1629,
+            trainval=8144,
+            test=8041,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),

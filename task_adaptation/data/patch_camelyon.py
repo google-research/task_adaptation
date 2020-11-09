@@ -23,7 +23,7 @@ from task_adaptation.registry import Registry
 import tensorflow_datasets as tfds
 
 
-@Registry.register("data.patch_camelyon", "object")
+@Registry.register("data.patch_camelyon", "class")
 class PatchCamelyonData(base.ImageTfdsData):
   """Provides PatchCamelyon data."""
 
@@ -38,12 +38,18 @@ class PatchCamelyonData(base.ImageTfdsData):
         "train": "train",
         "val": "validation",
         "trainval": "train+validation",
+        "train800": "train[:800]",
+        "val200": "validation[:200]",
+        "train800val200": "train[:800]+validation[:200]",
     }
     # Creates a dict with example counts.
     num_samples_splits = {
         "test": dataset_builder.info.splits["test"].num_examples,
         "train": dataset_builder.info.splits["train"].num_examples,
         "val": dataset_builder.info.splits["validation"].num_examples,
+        "train800": 800,
+        "val200": 200,
+        "train800val200": 1000,
     }
     num_samples_splits["trainval"] = (
         num_samples_splits["train"] + num_samples_splits["val"])

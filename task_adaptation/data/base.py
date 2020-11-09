@@ -21,7 +21,7 @@ from __future__ import print_function
 
 import abc
 import six
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 
 
@@ -65,15 +65,17 @@ def make_get_and_cast_tensors_fn(output_tensors):
     The function performing the operation.
   """
 
-  def _iter_dictionary():
+  def _tensors_to_cast():
+    tensors_to_cast = []  # AutoGraph does not support generators.
     for tensor_name, tensor_dtype in output_tensors.items():
       if isinstance(tensor_dtype, tuple) and len(tensor_dtype) == 2:
-        yield tensor_name, tensor_dtype[0], tensor_dtype[1]
+        tensors_to_cast.append((tensor_name, tensor_dtype[0], tensor_dtype[1]))
       elif tensor_dtype is None or isinstance(tensor_dtype, tf.dtypes.DType):
-        yield tensor_name, tensor_name, tensor_dtype
+        tensors_to_cast.append((tensor_name, tensor_name, tensor_dtype))
       else:
         raise ValueError('Values of the output_tensors dictionary must be '
                          'None, tf.dtypes.DType or 2-tuples.')
+    return tensors_to_cast
 
   def _get_and_cast_fn(data):
     """Get and cast tensors by name, optionally changing the name too."""
@@ -81,7 +83,7 @@ def make_get_and_cast_tensors_fn(output_tensors):
     return {
         new_name:
         data[name] if new_dtype is None else tf.cast(data[name], new_dtype)
-        for name, new_name, new_dtype in _iter_dictionary()
+        for name, new_name, new_dtype in _tensors_to_cast()
     }
 
   return _get_and_cast_fn
@@ -106,8 +108,96 @@ def compose_preprocess_fn(*functions):
   return _composed_fn
 
 
+# Note: DO NOT implement any method in this abstract class.
 @six.add_metaclass(abc.ABCMeta)
-class ImageData(object):
+class ImageDataInterface(object):
+  """Interface to the image data classes."""
+
+  @property
+  @abc.abstractmethod
+  def default_label_key(self):
+    """Returns the default label key of the dataset."""
+
+  @property
+  @abc.abstractmethod
+  def label_keys(self):
+    """Returns a tuple with the available label keys of the dataset."""
+
+  @property
+  @abc.abstractmethod
+  def num_channels(self):
+    """Returns the number of channels of the images in the dataset."""
+
+  @property
+  @abc.abstractmethod
+  def splits(self):
+    """Returns the splits defined in the dataset."""
+
+  @abc.abstractmethod
+  def get_num_samples(self, split_name):
+    """Returns the number of images in the given split name."""
+
+  @abc.abstractmethod
+  def get_num_classes(self, label_key=None):
+    """Returns the number of classes of the given label_key."""
+
+  @abc.abstractmethod
+  def get_tf_data(self,
+                  split_name,
+                  batch_size,
+                  preprocess_fn=None,
+                  preprocess_before_filter=None,
+                  epochs=None,
+                  drop_remainder=True,
+                  for_eval=False,
+                  shuffle_buffer_size=None,
+                  prefetch=1,
+                  train_examples=None,
+                  filtered_num_samples=None,
+                  filter_fn=None,
+                  batch_preprocess_fn=None,
+                  ignore_errors=False,
+                  shuffle_files=False):
+    """Provides preprocessed and batched data.
+
+    Args:
+      split_name: name of a data split to provide. Can be "train", "val",
+          "trainval" or "test".
+      batch_size: batch size.
+      preprocess_fn: a function for preprocessing input data. It expects a
+          dictionary with a key "image" associated with a 3D image tensor.
+      preprocess_before_filter: a function for preprocessing input data,
+          before filter_fn. It is only designed for light preprocessing,
+          i.e. augment with image id. For heavy preprocessing, it's more
+          efficient to do it after filter_fn.
+      epochs: number of full passes through the data. If None, the data is
+          provided indefinitely.
+      drop_remainder: if True, the last incomplete batch of data is dropped.
+          Normally, this parameter should be True, otherwise it leads to
+          the unknown batch dimension, which is not compatible with training
+          or evaluation on TPUs.
+      for_eval: get data for evaluation. Disables shuffling.
+      shuffle_buffer_size: overrides default shuffle buffer size.
+      prefetch: number of batches to prefetch.
+      train_examples: optional number of examples to take for training.
+        If greater than available number of examples, equivalent to None (all).
+        Ignored with for_eval is True.
+      filtered_num_samples: required when filter_fn is set, number of
+        samples after applying filter_fn.
+      filter_fn: filter function for generating training subset.
+      batch_preprocess_fn: optional function for preprocessing a full batch of
+        input data. Analoguous to preprocess_fn with an extra batch-dimension
+        on all tensors.
+      ignore_errors: whether to skip images that encountered an error in
+        decoding *or pre-processing*, the latter is why it is False by default.
+      shuffle_files: whether to shuffle the dataset files or not.
+
+    Returns:
+      A tf.data.Dataset object as a dictionary containing the output tensors.
+    """
+
+
+class ImageData(ImageDataInterface):
   """Abstract data provider class.
 
   IMPORTANT: You should use ImageTfdsData below whenever is posible. We want
@@ -143,7 +233,7 @@ class ImageData(object):
       base_preprocess_fn: optional, base preprocess function to apply in all
         cases for this dataset.
       filter_fn: optional, function to filter the examples to use in the
-        dataset.
+        dataset. DEPRECATED, soon to be removed.
       image_decoder: a function to decode image.
       num_channels: number of channels in the dataset image.
     """
@@ -154,6 +244,8 @@ class ImageData(object):
     self._base_preprocess_fn = base_preprocess_fn
     self._default_label_key = default_label_key
     self._filter_fn = filter_fn
+    if self._filter_fn:
+      tf.logging.warning('Using deprecated filtering mechanism.')
     self._image_decoder = image_decoder
     self._num_channels = num_channels
 
@@ -176,11 +268,15 @@ class ImageData(object):
 
   @property
   def label_keys(self):
-    return self._num_classes.keys()
+    return tuple(self._num_classes.keys())
 
   @property
   def num_channels(self):
     return self._num_channels
+
+  @property
+  def splits(self):
+    return tuple(self._num_samples_splits.keys())
 
   def get_num_samples(self, split_name):
     return self._num_samples_splits[split_name]
@@ -190,77 +286,79 @@ class ImageData(object):
       label_key = self._default_label_key
     return self._num_classes[label_key]
 
+  def get_version(self):
+    return NotImplementedError('Version is not supported outside TFDS.')
+
   def get_tf_data(self,
                   split_name,
                   batch_size,
                   preprocess_fn=None,
+                  preprocess_before_filter=None,
                   epochs=None,
                   drop_remainder=True,
                   for_eval=False,
                   shuffle_buffer_size=None,
                   prefetch=1,
                   train_examples=None,
-                  filtered_num_samples=None):
-    """Provides preprocessed and batched data.
-
-    Args:
-      split_name: name of a data split to provide. Can be "train", "val",
-          "trainval" or "test".
-      batch_size: batch size.
-      preprocess_fn: a function for preprocessing input data. It expects a
-          dictionary with a key "image" associated with a 3D image tensor.
-      epochs: number of full passes through the data. If None, the data is
-          provided indefinitely.
-      drop_remainder: if True, the last incomplete batch of data is dropped.
-          Normally, this parameter should be True, otherwise it leads to
-          the unknown batch dimension, which is not compatible with training
-          or evaluation on TPUs.
-      for_eval: get data for evaluation. Disables shuffling.
-      shuffle_buffer_size: overrides default shuffle buffer size.
-      prefetch: number of batches to prefetch.
-      train_examples: optional number of examples to take for training.
-        If greater than available number of examples, equivalent to None (all).
-        Ignored with for_eval is True.
-      filtered_num_samples: required when filter_fn is set, number of
-        samples after applying filter_fn.
-
-    Returns:
-      A tf.data.Dataset object as a dictionary containing the output tensors.
-    """
-
+                  filtered_num_samples=None,
+                  filter_fn=None,
+                  batch_preprocess_fn=None,
+                  ignore_errors=False,
+                  shuffle_files=False):
     # Obtains tf.data object.
     # We shuffle later when not for eval, it's important to not shuffle before
     # a subset of data is retrieved.
     data = self._get_dataset_split(
         split_name=split_name,
-        shuffle_files=not (for_eval or train_examples))
+        shuffle_files=shuffle_files)
 
-    if not for_eval:
-      # Dataset filtering priority: (1) filter_fn; (2) train_examples.
-      if self._filter_fn and train_examples:
-        raise ValueError('You must not set both filter_fn and train_examples.')
-      if self._filter_fn:
-        tf.logging.warning(
-            'You are filtering the dataset. Notice that this may hurt your '
-            'throughput, since examples still need to be decoded, and may '
-            'make the result of get_num_samples() inacurate. '
-            'train_examples is ignored for filtering, but only used for '
-            'calculating training steps.')
-        data = data.filter(self._filter_fn)
-        num_samples = filtered_num_samples
-        assert num_samples is not None, (
-            'You must set filtered_num_samples once filter_fn is set.')
-        # Get actual train examples...
-      elif train_examples:
-        # Deterministic for same dataset version.
-        data = data.take(train_examples)
-        num_samples = train_examples
-      else:
-        num_samples = self.get_num_samples(split_name)
+    if preprocess_before_filter is not None:
+      data = preprocess_before_filter(data)
 
-      # Cache the whole dataset if it's smaller than 150K examples
-      if num_samples <= 150000:
-        data = data.cache()
+
+    if self._filter_fn and (filter_fn is None):
+      filter_fn = self._filter_fn
+
+    # Dataset filtering priority: (1) filter_fn; (2) train_examples.
+    if filter_fn and train_examples:
+      raise ValueError('You must not set both filter_fn and train_examples.')
+
+    if filter_fn:
+      tf.logging.warning(
+          'You are filtering the dataset. Notice that this may hurt your '
+          'throughput, since examples still need to be decoded, and may '
+          'make the result of get_num_samples() inacurate. '
+          'train_examples is ignored for filtering, but only used for '
+          'calculating training steps.')
+      data = data.filter(filter_fn)
+      num_samples = filtered_num_samples
+      assert num_samples is not None, (
+          'You must set filtered_num_samples if filter_fn is set.')
+
+    elif not for_eval and train_examples:
+      # Deterministic for same dataset version.
+      data = data.take(train_examples)
+      num_samples = train_examples
+
+    else:
+      num_samples = self.get_num_samples(split_name)
+
+    data = self._cache_data_if_possible(
+        data, split_name=split_name, num_samples=num_samples, for_eval=for_eval)
+
+    def print_filtered_subset(ex):
+      """Print filtered subset for debug purpose."""
+      if isinstance(ex, dict) and 'id' in ex and 'label' in ex:
+        print_op = tf.print(
+            'filtered_example:',
+            ex['id'],
+            ex['label'],
+            output_stream=tf.logging.error)
+        with tf.control_dependencies([print_op]):
+          ex['id'] = tf.identity(ex['id'])
+      return ex
+    if not for_eval and filter_fn:
+      data = data.map(print_filtered_subset)
 
     # Repeats data `epochs` time or indefinitely if `epochs` is None.
     if epochs is None or epochs > 1:
@@ -270,20 +368,16 @@ class ImageData(object):
     if not for_eval and shuffle_buffer_size > 1:
       data = data.shuffle(shuffle_buffer_size)
 
-    # Compose the base_preprocess_fn and the given preprocess_fn.
-    preprocess_fn = compose_preprocess_fn(self._image_decoder,
-                                          self._base_preprocess_fn,
-                                          preprocess_fn)
+    data = self._preprocess_and_batch_data(
+        data, batch_size, drop_remainder, preprocess_fn, ignore_errors)
 
-    # Currently, map_and_batch provides noticable (almost 2-fold) speedup as
-    # compared to using non-fused operations.
-    data = data.apply(tf.data.experimental.map_and_batch(
-        map_func=preprocess_fn,
-        batch_size=batch_size,
-        drop_remainder=drop_remainder,
-        num_parallel_calls=self._num_preprocessing_threads))
+    if batch_preprocess_fn is not None:
+      data = data.map(batch_preprocess_fn)
 
-    return data.prefetch(prefetch)
+    if prefetch != 0:
+      data = data.prefetch(prefetch)
+
+    return data
 
   @abc.abstractmethod
   def _get_dataset_split(self, split_name, shuffle_files=False):
@@ -303,13 +397,43 @@ class ImageData(object):
         'your dataset to TFDS (go/tfds) and inheriting from ImageTfdsData '
         'instead.')
 
+  def _preprocess_and_batch_data(self,
+                                 data,
+                                 batch_size,
+                                 drop_remainder=True,
+                                 preprocess_fn=None,
+                                 ignore_errors=False):
+    """Preprocesses and batches a given tf.Dataset."""
+    # Compose the base_preprocess_fn and the given preprocess_fn.
+    preprocess_fn = compose_preprocess_fn(self._image_decoder,
+                                          self._base_preprocess_fn,
+                                          preprocess_fn)
+
+    # map_and_batch is deprecated, and at least when nothing happens
+    # in-between, automatically gets merged for efficiency.
+    data = data.map(preprocess_fn, self._num_preprocessing_threads)
+
+    if ignore_errors:
+      tf.logging.info('Ignoring any image with errors.')
+      data = data.apply(tf.data.experimental.ignore_errors())
+
+    return data.batch(batch_size, drop_remainder)
+
+  def _cache_data_if_possible(self, data, split_name, num_samples, for_eval):
+    del split_name
+
+    if not for_eval and num_samples <= 150000:
+      # Cache the whole dataset if it's smaller than 150K examples.
+      data = data.cache()
+    return data
+
 
 class ImageTfdsData(ImageData):
   """Abstract data provider class for datasets available in Tensorflow Datasets.
 
-  To add new datasets inherit from this class. See imagenet.py for an example.
-  This class implements a simple API that is used throughout the project and
-  provides standardized way of data preprocessing and batching.
+  To add new datasets inherit from this class. This class implements a simple
+  API that is used throughout the project and provides standardized way of data
+  preprocessing and batching.
   """
 
   @abc.abstractmethod
@@ -337,6 +461,9 @@ class ImageTfdsData(ImageData):
     kwargs.update({'image_decoder': _image_decoder})
 
     super(ImageTfdsData, self).__init__(**kwargs)
+
+  def get_version(self):
+    return self._dataset_builder.version.__str__()
 
   def _get_dataset_split(self, split_name, shuffle_files):
     dummy_decoder = tfds.decode.SkipDecoding()

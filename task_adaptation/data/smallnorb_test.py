@@ -20,12 +20,12 @@ from __future__ import division
 from __future__ import print_function
 from task_adaptation.data import data_testing_lib
 from task_adaptation.data import smallnorb
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 # For each of the 4 different data set configuration we need to run all the
 # standardized tests in data_testing_lib.BaseDataTest.
-class SmallNORBTestDefault(data_testing_lib.BaseTfdsDataTest):
+class SmallNORBTestDefault(data_testing_lib.BaseVTABDataTest):
   """See base classes for usage and test descriptions."""
 
   def setUp(self):
@@ -37,6 +37,9 @@ class SmallNORBTestDefault(data_testing_lib.BaseTfdsDataTest):
             val=12150,
             trainval=36450,
             test=12150,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (96, 96, 3),
@@ -45,7 +48,7 @@ class SmallNORBTestDefault(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map="label_category")
 
 
-class SmallNORBTestElevation(data_testing_lib.BaseTfdsDataTest):
+class SmallNORBTestElevation(data_testing_lib.BaseVTABDataTest):
   """See base classes for usage and test descriptions."""
 
   def setUp(self):
@@ -57,6 +60,9 @@ class SmallNORBTestElevation(data_testing_lib.BaseTfdsDataTest):
             val=12150,
             trainval=36450,
             test=12150,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (96, 96, 3),
@@ -65,7 +71,7 @@ class SmallNORBTestElevation(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map="label_elevation")
 
 
-class SmallNORBTestAzimuth(data_testing_lib.BaseTfdsDataTest):
+class SmallNORBTestAzimuth(data_testing_lib.BaseVTABDataTest):
   """See base classes for usage and test descriptions."""
 
   def setUp(self):
@@ -77,6 +83,9 @@ class SmallNORBTestAzimuth(data_testing_lib.BaseTfdsDataTest):
             val=12150,
             trainval=36450,
             test=12150,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (96, 96, 3),
@@ -85,7 +94,7 @@ class SmallNORBTestAzimuth(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map="label_azimuth")
 
 
-class SmallNORBTestLighting(data_testing_lib.BaseTfdsDataTest):
+class SmallNORBTestLighting(data_testing_lib.BaseVTABDataTest):
   """See base classes for usage and test descriptions."""
 
   def setUp(self):
@@ -97,6 +106,9 @@ class SmallNORBTestLighting(data_testing_lib.BaseTfdsDataTest):
             val=12150,
             trainval=36450,
             test=12150,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (96, 96, 3),

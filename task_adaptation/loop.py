@@ -26,7 +26,7 @@ from absl import flags
 import task_adaptation.data_loader as data_loader
 import task_adaptation.model as model
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 # TPU-specific constant, see
@@ -48,11 +48,11 @@ def setup_estimator(
   """Produces TPUEstimator object for a given configuration."""
 
   # Merge all parameters into single dictionary (for tf.estimator API).
+  num_classes = data_params["dataset"].get_num_classes()
   params = {k: v for d in [optimization_params, data_params,
                            {"hub_module": hub_module,
                             "hub_module_signature": hub_module_signature,
-                            "num_classes": data_loader.get_num_classes(
-                                data_params["dataset"])}]
+                            "num_classes": num_classes}]
             for k, v in d.items()}
 
   # Defines the configutation of an adaptation/evaluation loop.
@@ -101,6 +101,7 @@ def run_training_loop(hub_module,
                       optimization_params,
                       data_params):
   """Runs training loop."""
+  data_params["dataset"] = data_loader.get_dataset_instance(data_params)
   estimator = setup_estimator(hub_module,
                               hub_module_signature,
                               work_dir,
@@ -122,6 +123,7 @@ def run_evaluation_loop(hub_module,
                         optimization_params,
                         data_params):
   """Runs evaluation loop."""
+  data_params["dataset"] = data_loader.get_dataset_instance(data_params)
   estimator = setup_estimator(hub_module,
                               hub_module_signature,
                               work_dir,
@@ -142,8 +144,7 @@ def run_evaluation_loop(hub_module,
     for ckpt in all_checkpoints[-1:]:
       ckpt = os.path.join(work_dir, ckpt)
       res = estimator.evaluate(input_fn,
-                               steps=(data_loader.get_num_samples(
-                                   data_params["dataset"],
+                               steps=(data_params["dataset"].get_num_samples(
                                    data_params["dataset_eval_split_name"]) //
                                       data_params["batch_size_eval"]),
                                checkpoint_path=ckpt)

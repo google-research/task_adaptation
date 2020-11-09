@@ -20,10 +20,10 @@ from __future__ import division
 from __future__ import print_function
 from task_adaptation.data import data_testing_lib
 from task_adaptation.data import resisc45
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
-class Resisc45DataTest(data_testing_lib.BaseTfdsDataTest):
+class Resisc45DataTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -35,6 +35,9 @@ class Resisc45DataTest(data_testing_lib.BaseTfdsDataTest):
             val=6300,
             trainval=25200,
             test=6300,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (256, 256, 3),

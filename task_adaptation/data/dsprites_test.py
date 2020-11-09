@@ -20,12 +20,12 @@ from __future__ import division
 from __future__ import print_function
 from task_adaptation.data import data_testing_lib
 from task_adaptation.data import dsprites
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 # For each of the 5 different data set configuration we need to run all the
 # standardized tests in data_testing_lib.BaseDataTest.
-class DSpritesTestDefault(data_testing_lib.BaseTfdsDataTest):
+class DSpritesTestDefault(data_testing_lib.BaseVTABDataTest):
   """See base classes for usage and test descriptions."""
 
   def setUp(self):
@@ -37,6 +37,9 @@ class DSpritesTestDefault(data_testing_lib.BaseTfdsDataTest):
             val=73728,
             trainval=663552,
             test=73728,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (64, 64, 3),
@@ -45,7 +48,7 @@ class DSpritesTestDefault(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map="label_shape")
 
 
-class DSpritesTestScale(data_testing_lib.BaseTfdsDataTest):
+class DSpritesTestScale(data_testing_lib.BaseVTABDataTest):
   """See base classes for usage and test descriptions."""
 
   def setUp(self):
@@ -57,6 +60,9 @@ class DSpritesTestScale(data_testing_lib.BaseTfdsDataTest):
             val=73728,
             trainval=663552,
             test=73728,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (64, 64, 3),
@@ -65,7 +71,7 @@ class DSpritesTestScale(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map="label_scale")
 
 
-class DSpritesTestOrientation(data_testing_lib.BaseTfdsDataTest):
+class DSpritesTestOrientation(data_testing_lib.BaseVTABDataTest):
   """See base classes for usage and test descriptions."""
 
   def setUp(self):
@@ -77,6 +83,9 @@ class DSpritesTestOrientation(data_testing_lib.BaseTfdsDataTest):
             val=73728,
             trainval=663552,
             test=73728,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (64, 64, 3),
@@ -85,7 +94,7 @@ class DSpritesTestOrientation(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map="label_orientation")
 
 
-class DSpritesTestXPosition(data_testing_lib.BaseTfdsDataTest):
+class DSpritesTestXPosition(data_testing_lib.BaseVTABDataTest):
   """See base classes for usage and test descriptions."""
 
   def setUp(self):
@@ -97,6 +106,9 @@ class DSpritesTestXPosition(data_testing_lib.BaseTfdsDataTest):
             val=73728,
             trainval=663552,
             test=73728,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (64, 64, 3),
@@ -105,7 +117,7 @@ class DSpritesTestXPosition(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map="label_x_position")
 
 
-class DSpritesTestXPositionGrouped(data_testing_lib.BaseDataTest):
+class DSpritesTestXPositionGrouped(data_testing_lib.BaseVTABDataTest):
   """See base classes for usage and test descriptions."""
 
   def setUp(self):
@@ -117,14 +129,18 @@ class DSpritesTestXPositionGrouped(data_testing_lib.BaseDataTest):
             val=73728,
             trainval=663552,
             test=73728,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (64, 64, 3),
             "label": (),
-        })
+        },
+        tfds_label_key_map={})
 
 
-class DSpritesTestYPosition(data_testing_lib.BaseTfdsDataTest):
+class DSpritesTestYPosition(data_testing_lib.BaseVTABDataTest):
   """See base classes for usage and test descriptions."""
 
   def setUp(self):
@@ -136,6 +152,9 @@ class DSpritesTestYPosition(data_testing_lib.BaseTfdsDataTest):
             val=73728,
             trainval=663552,
             test=73728,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (64, 64, 3),

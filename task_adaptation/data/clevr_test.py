@@ -20,10 +20,10 @@ from __future__ import division
 from __future__ import print_function
 from task_adaptation.data import clevr
 from task_adaptation.data import data_testing_lib
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
-class CLEVRDataCountAllTest(data_testing_lib.BaseTfdsDataTest):
+class CLEVRDataCountAllTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -35,6 +35,9 @@ class CLEVRDataCountAllTest(data_testing_lib.BaseTfdsDataTest):
             val=7000,
             trainval=70000,
             test=15000,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),
@@ -43,7 +46,7 @@ class CLEVRDataCountAllTest(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map={})
 
 
-class CLEVRDataCountCylindersTest(data_testing_lib.BaseTfdsDataTest):
+class CLEVRDataCountCylindersTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -55,6 +58,9 @@ class CLEVRDataCountCylindersTest(data_testing_lib.BaseTfdsDataTest):
             val=7000,
             trainval=70000,
             test=15000,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),
@@ -63,7 +69,7 @@ class CLEVRDataCountCylindersTest(data_testing_lib.BaseTfdsDataTest):
         tfds_label_key_map={})
 
 
-class CLEVRDataClosestTest(data_testing_lib.BaseTfdsDataTest):
+class CLEVRDataClosestTest(data_testing_lib.BaseVTABDataTest):
   """See base class for usage and test descriptions."""
 
   def setUp(self):
@@ -75,6 +81,9 @@ class CLEVRDataClosestTest(data_testing_lib.BaseTfdsDataTest):
             val=7000,
             trainval=70000,
             test=15000,
+            train800val200=1000,
+            train800=800,
+            val200=200,
         ),
         required_tensors_shapes={
             "image": (None, None, 3),

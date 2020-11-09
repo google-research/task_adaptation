@@ -22,6 +22,7 @@ from __future__ import print_function
 
 import functools
 
+from task_adaptation.data import base
 # pylint: disable=unused-import
 from task_adaptation.data import caltech
 from task_adaptation.data import cifar
@@ -43,23 +44,18 @@ from task_adaptation.data import svhn
 
 from task_adaptation.registry import Registry
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
-def get_num_classes(dataset, label_key=None):
-  return Registry.lookup(dataset).get_num_classes(label_key)
-
-
-def get_num_samples(dataset, split):
-  return Registry.lookup(dataset).get_num_samples(split)
-
-
-def get_default_label_key(dataset):
-  return Registry.lookup(dataset).default_label_key
-
-
-def get_num_channels(dataset):
-  return Registry.lookup(dataset).num_channels
+def get_dataset_instance(data_params):
+  if isinstance(data_params["dataset"], str):
+    data_cls = Registry.lookup(data_params["dataset"])
+    return data_cls(data_dir=data_params["data_dir"])
+  elif isinstance(data_params["dataset"], base.ImageData):
+    return data_params["dataset"]
+  else:
+    raise ValueError("Unknown type for \"dataset\" field: {}".format(
+        type(data_params["dataset"])))
 
 
 def preprocess_fn(data, size=224, input_range=(0.0, 1.0)):
@@ -80,8 +76,7 @@ def build_data_pipeline(data_params, mode):
     raise ValueError("The input pipeline supports two modes: `train` or `eval`."
                      "Provided mode is {}".format(mode))
 
-  data = Registry.lookup(data_params["dataset"],
-                         kwargs_extra={"data_dir": data_params["data_dir"]})
+  data = get_dataset_instance(data_params)
   data_fn = functools.partial(
       data.get_tf_data,
       split_name=(data_params["dataset_train_split_name"] if mode == "train"

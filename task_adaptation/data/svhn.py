@@ -28,7 +28,7 @@ import tensorflow_datasets as tfds
 TRAIN_SPLIT_PERCENT = 90
 
 
-@Registry.register("data.svhn", "object")
+@Registry.register("data.svhn", "class")
 class SvhnData(base.ImageTfdsData):
   """Provides SVHN data.
 
@@ -48,17 +48,6 @@ class SvhnData(base.ImageTfdsData):
     dataset_builder = tfds.builder("svhn_cropped:3.*.*", data_dir=data_dir)
     dataset_builder.download_and_prepare()
 
-    # Defines dataset specific train/val/trainval/test splits.
-    # The validation set is split out of the original training set, and the
-    # remaining examples are used as the "train" split. The "trainval" split
-    # corresponds to the original training set.
-    tfds_splits = {
-        "train": "train[:{}%]".format(TRAIN_SPLIT_PERCENT),
-        "val": "train[{}%:]".format(TRAIN_SPLIT_PERCENT),
-        "trainval": "train",
-        "test": "test",
-    }
-
     # Example counts are retrieved from the tensorflow dataset info.
     trainval_count = dataset_builder.info.splits[tfds.Split.TRAIN].num_examples
     test_count = dataset_builder.info.splits[tfds.Split.TEST].num_examples
@@ -69,7 +58,33 @@ class SvhnData(base.ImageTfdsData):
         "train": TRAIN_SPLIT_PERCENT * trainval_count // 100,
         "val": trainval_count - TRAIN_SPLIT_PERCENT * trainval_count // 100,
         "trainval": trainval_count,
-        "test": test_count
+        "test": test_count,
+        "train800": 800,
+        "val200": 200,
+        "train800val200": 1000,
+    }
+
+    # Defines dataset specific train/val/trainval/test splits.
+    # The validation set is split out of the original training set, and the
+    # remaining examples are used as the "train" split. The "trainval" split
+    # corresponds to the original training set.
+    tfds_splits = {
+        "train":
+            "train[:{}]".format(num_samples_splits["train"]),
+        "val":
+            "train[{}:]".format(num_samples_splits["train"]),
+        "trainval":
+            "train",
+        "test":
+            "test",
+        "train800":
+            "train[:800]",
+        "val200":
+            "train[{}:{}]".format(num_samples_splits["train"],
+                                  num_samples_splits["train"] + 200),
+        "train800val200":
+            "train[:800]+train[{}:{}]".format(
+                num_samples_splits["train"], num_samples_splits["train"] + 200),
     }
 
     super(SvhnData, self).__init__(
