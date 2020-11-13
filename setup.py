@@ -35,7 +35,7 @@ setup(
         'numpy',
         'six',
         'mock',
-        'tensorflow==1.15',
+        'tensorflow==2.3.1',
         'tfds-nightly',
         'tensorflow-hub',
     ],
