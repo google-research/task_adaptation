@@ -26,6 +26,7 @@ import six
 from task_adaptation.data import base
 import tensorflow.compat.v1 as tf
 
+# pylint: disable=g-bad-import-order
 
 
 @six.add_metaclass(abc.ABCMeta)
