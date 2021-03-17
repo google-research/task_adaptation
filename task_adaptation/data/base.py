@@ -145,6 +145,7 @@ class ImageDataInterface(object):
   def get_tf_data(self,
                   split_name,
                   batch_size,
+                  pairwise_mix_fn=None,
                   preprocess_fn=None,
                   preprocess_before_filter=None,
                   epochs=None,
@@ -164,6 +165,7 @@ class ImageDataInterface(object):
       split_name: name of a data split to provide. Can be "train", "val",
           "trainval" or "test".
       batch_size: batch size.
+      pairwise_mix_fn: a function for mixing each data with another random one.
       preprocess_fn: a function for preprocessing input data. It expects a
           dictionary with a key "image" associated with a 3D image tensor.
       preprocess_before_filter: a function for preprocessing input data,
@@ -292,6 +294,7 @@ class ImageData(ImageDataInterface):
   def get_tf_data(self,
                   split_name,
                   batch_size,
+                  pairwise_mix_fn=None,
                   preprocess_fn=None,
                   preprocess_before_filter=None,
                   epochs=None,
@@ -368,11 +371,12 @@ class ImageData(ImageDataInterface):
     if not for_eval and shuffle_buffer_size > 1:
       data = data.shuffle(shuffle_buffer_size)
 
-    data = self._preprocess_and_batch_data(
-        data, batch_size, drop_remainder, preprocess_fn, ignore_errors)
+    data = self._preprocess_and_batch_data(data, batch_size, drop_remainder,
+                                           pairwise_mix_fn, preprocess_fn,
+                                           ignore_errors)
 
     if batch_preprocess_fn is not None:
-      data = data.map(batch_preprocess_fn)
+      data = data.map(batch_preprocess_fn, self._num_preprocessing_threads)
 
     if prefetch != 0:
       data = data.prefetch(prefetch)
@@ -401,21 +405,19 @@ class ImageData(ImageDataInterface):
                                  data,
                                  batch_size,
                                  drop_remainder=True,
+                                 pairwise_mix_fn=None,
                                  preprocess_fn=None,
                                  ignore_errors=False):
     """Preprocesses and batches a given tf.Dataset."""
-    # Compose the base_preprocess_fn and the given preprocess_fn.
-    preprocess_fn = compose_preprocess_fn(self._image_decoder,
-                                          self._base_preprocess_fn,
-                                          preprocess_fn)
+    # Preprocess with basic preprocess functions (e.g. decoding images, parsing
+    # features etc.).
+    base_preprocess_fn = compose_preprocess_fn(self._image_decoder,
+                                               self._base_preprocess_fn)
+    # Note: `map_and_batch` is deprecated, and at least when nothing happens
+    # in-between, automatically gets merged for efficiency. Same below.
+    data = data.map(base_preprocess_fn, self._num_preprocessing_threads)
 
-    # map_and_batch is deprecated, and at least when nothing happens
-    # in-between, automatically gets merged for efficiency.
-    data = data.map(preprocess_fn, self._num_preprocessing_threads)
-
-    if ignore_errors:
-      tf.logging.info('Ignoring any image with errors.')
-      data = data.apply(tf.data.experimental.ignore_errors())
+    # Mix images pair-wise before other element-wise preprocessing.
 
     return data.batch(batch_size, drop_remainder)
 

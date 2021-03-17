@@ -35,9 +35,10 @@ setup(
         'numpy',
         'six',
         'mock',
-        'tensorflow==1.15',
+        'tensorflow',
         'tfds-nightly',
         'tensorflow-hub',
+        'tensorflow_addons',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

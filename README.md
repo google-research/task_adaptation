@@ -69,7 +69,7 @@ Data preparation may take substantial amount of time: up to a day depending on
 your internet connection and CPU model.
 
 Note, that *Diabetic Retinopathy* and *Resisc45* datasets can not be downloaded
-automatically, so a user should download these datasets themself, see [TFDS
+automatically, so a user should download these dataset themself, see [TFDS
 documentation](https://www.tensorflow.org/datasets) for more details.
 
 #### Install dataset specific dependencies

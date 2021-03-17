@@ -19,8 +19,28 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import task_adaptation.data.base as base
+import numpy as np
+from task_adaptation.data import base
+from task_adaptation.data import data_testing_lib
 import tensorflow.compat.v1 as tf
+
+
+class FakeImageData(base.ImageData):
+  EXAMPLE_NUM = 5
+
+  def __init__(self):
+    super(FakeImageData, self).__init__(
+        num_samples_splits={'fake': FakeImageData.EXAMPLE_NUM},
+        shuffle_buffer_size=1,  # no shuffle
+        num_preprocessing_threads=1,
+        num_classes=1)
+
+  def _get_dataset_split(self, split_name, shuffle_files=False):
+
+    def fake_data(index):
+      return {'image': index, 'label': index}
+
+    return tf.data.Dataset.range(FakeImageData.EXAMPLE_NUM).map(fake_data)
 
 
 class BaseTest(tf.test.TestCase):
@@ -114,6 +134,43 @@ class BaseTest(tf.test.TestCase):
     fn = base.compose_preprocess_fn(lambda x: 2 * x, None, lambda x: x + 1)
     self.assertTrue(callable(fn))
     self.assertEqual(fn(25), 51)
+
+  def test_pairwise_mix(self):
+
+    def fake_pairwise_mix(data1, data2):
+      return {
+          'image': data1['image'] + data2['image'],
+          'label': tf.math.maximum(data1['label'], data2['label']),
+      }
+
+    data = FakeImageData()
+    dataset = data.get_tf_data(
+        split_name='fake',
+        batch_size=1,
+        pairwise_mix_fn=fake_pairwise_mix,
+        epochs=1)
+
+    with self.session() as sess:
+      actual = list(
+          data_testing_lib.BaseDataTest.iterate_dataset(dataset, sess))
+      self.assertAllEqual([
+          {
+              'image': np.asarray([1]),
+              'label': np.asarray([1])
+          },
+          {
+              'image': np.asarray([3]),
+              'label': np.asarray([2])
+          },
+          {
+              'image': np.asarray([5]),
+              'label': np.asarray([3])
+          },
+          {
+              'image': np.asarray([7]),
+              'label': np.asarray([4])
+          },
+      ], actual)
 
 
 if __name__ == '__main__':
