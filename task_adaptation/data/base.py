@@ -418,6 +418,20 @@ class ImageData(ImageDataInterface):
     data = data.map(base_preprocess_fn, self._num_preprocessing_threads)
 
     # Mix images pair-wise before other element-wise preprocessing.
+    # Note: The pairing is implemented by shifting `data` by 1, so the last
+    # element of `data` will be dropped.
+    if pairwise_mix_fn is not None:
+      data = tf.data.Dataset.zip(
+          (data, data.skip(1))).map(pairwise_mix_fn,
+                                    self._num_preprocessing_threads)
+
+    # Preprocess with customized preprocess functions.
+    if preprocess_fn is not None:
+      data = data.map(preprocess_fn, self._num_preprocessing_threads)
+
+    if ignore_errors:
+      tf.logging.info('Ignoring any image with errors.')
+      data = data.apply(tf.data.experimental.ignore_errors())
 
     return data.batch(batch_size, drop_remainder)
 
