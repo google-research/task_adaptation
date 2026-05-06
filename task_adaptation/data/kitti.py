@@ -30,7 +30,7 @@ def _count_all_pp(x):
   """Count all objects."""
   # Count distribution (thresholded at 15):
 
-  label = tf.math.minimum(tf.size(x["objects"]["type"]) - 1, 8)
+  label = tf.math.minimum(tf.size(x["objects"]["type"]) - 1, 15)
   return {"image": x["image"], "label": label}
 
 
@@ -50,7 +50,7 @@ def _count_left_pp(x):
 
   # Location feature contains (x, y, z) in meters w.r.t. the camera.
   objects_on_left = tf.where(x["objects"]["location"][:, 0] < 0)
-  label = tf.math.minimum(tf.size(objects_on_left), 8)
+  label = tf.math.minimum(tf.size(objects_on_left), 15)
   return {"image": x["image"], "label": label}
 
 
@@ -61,7 +61,7 @@ def _count_far_pp(x):
 
   # Location feature contains (x, y, z) in meters w.r.t. the camera.
   distant_objects = tf.where(x["objects"]["location"][:, 2] >= 25)
-  label = tf.math.minimum(tf.size(distant_objects), 8)
+  label = tf.math.minimum(tf.size(distant_objects), 15)
   return {"image": x["image"], "label": label}
 
 
@@ -72,7 +72,7 @@ def _count_near_pp(x):
 
   # Location feature contains (x, y, z) in meters w.r.t. the camera.
   close_objects = tf.where(x["objects"]["location"][:, 2] < 25)
-  label = tf.math.minimum(tf.size(close_objects), 8)
+  label = tf.math.minimum(tf.size(close_objects), 15)
   return {"image": x["image"], "label": label}
 
 
