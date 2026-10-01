@@ -150,7 +150,7 @@ data and checkpoints:
 
 ```
 $ export BUCKET=<CLOUD STORAGE BUCKET NAME>
-$ gsutil mb gs://$BUCKET
+$ gcloud storage buckets create gs://$BUCKET
 ```
 
 Note, that Cloud TPU does not support local file system, so the above step is
